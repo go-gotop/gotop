@@ -52,7 +52,7 @@ func TestCSVFile_Subscribe(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Logf("Test case: %s, start: %d, end: %d", tt.name, tt.start, tt.end)
 			
-			csvFile := NewCSVFile(testDir, tt.start, tt.end)
+			csvFile := NewCSVFile()
 			require.NotNil(t, csvFile)
 
 			var mu sync.Mutex
@@ -62,9 +62,12 @@ func TestCSVFile_Subscribe(t *testing.T) {
 			done := make(chan struct{})
 			var once sync.Once
 
-			err := csvFile.Stream(
-				tt.ctx,
-				func(trade types.TradeEvent) {
+			// 创建请求配置
+			request := &CSVFileRequest{
+				Dir:     testDir,
+				Start:   tt.start,
+				End:     tt.end,
+				Handler: func(trade types.TradeEvent) {
 					mu.Lock()
 					defer mu.Unlock()
 					t.Logf("Received tick: timestamp=%d, price=%s, size=%s, side=%v", 
@@ -77,14 +80,17 @@ func TestCSVFile_Subscribe(t *testing.T) {
 						})
 					}
 				},
-				func(err error) {
+				ErrorHandler: func(err error) {
 					t.Logf("Received error: %v", err)
 					lastErr = err
 					once.Do(func() {
-						close(done)
-					})
+							close(done)
+						})
 				},
-			)
+			}
+
+			// 连接数据流
+			err := csvFile.Connect(tt.ctx, request)
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -145,11 +151,10 @@ func TestCSVFile_ProcessFile(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// 创建临时文件
 			tmpFile := createTempCSV(t, tt.data)
 			defer os.Remove(tmpFile)
 
-			csvFile := NewCSVFile("", 0, time.Now().UnixMilli())
+			csvFile := NewCSVFile()
 			eventChan := make(chan types.TradeEvent, 1)
 
 			err := csvFile.processFile(tmpFile, eventChan, 0, time.Now().UnixMilli())

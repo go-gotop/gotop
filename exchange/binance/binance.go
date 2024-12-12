@@ -4,19 +4,18 @@ import (
 	"context"
 
 	"github.com/go-gotop/gotop/exchange"
+	"github.com/go-gotop/gotop/requests"
 	"github.com/go-gotop/gotop/types"
 )
 
 // NewBinanceExchange 创建 BinanceExchange
-func NewBinanceExchange(opts ...Option) *BinanceExchange {
-	o := &options{}
-	applyOptions(o, opts...)
-	return &BinanceExchange{opts: o}
+func NewBinanceExchange(client requests.HttpClient) *BinanceExchange {
+	return &BinanceExchange{client: client}
 }
 
 // BinanceExchange 是 Binance 交易所的实现
 type BinanceExchange struct {
-	opts *options
+	client requests.HttpClient
 }
 
 // Name 交易所名称

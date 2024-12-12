@@ -15,38 +15,50 @@ import (
 
 	"github.com/shopspring/decimal"
 	"github.com/go-gotop/gotop/types"
-	"github.com/go-gotop/gotop/datafeed"
 )
+
+// CSVFileRequest 请求参数
+type CSVFileRequest struct {
+	// ID 标识唯一性
+	ID string
+	// Dir 数据目录
+	Dir string
+	// Start 开始时间
+	Start int64
+	// End 结束时间
+	End int64
+	// Handler 处理函数
+	Handler func(trade types.TradeEvent)
+	// ErrorHandler 错误处理函数
+	ErrorHandler func(err error)
+	// CloseHandler 关闭处理函数
+	CloseHandler func()
+}
 
 // CSVFile CSV文件逐笔数据流
 type CSVFile struct {
-	// dir 数据目录
-	dir string
-	// start 开始时间
-	start int64
-	// end 结束时间
-	end int64
 	ctx    context.Context
 	cancel context.CancelFunc
-	handler datafeed.TradeHandler
-	errorHandler datafeed.ErrorHandler
+	request *CSVFileRequest
 }
 
 // NewCSVFile 创建CSV数据流
-func NewCSVFile(dir string, start, end int64) *CSVFile {
+func NewCSVFile() *CSVFile {
 	return &CSVFile{
-		dir:    dir,
-		start:  start,
-		end:    end,
+		ctx: context.Background(),
 	}
 }
 
-// Stream 流式读取CSV文件
-func (f *CSVFile) Stream(ctx context.Context, tradeHandler datafeed.TradeHandler, errorHandler datafeed.ErrorHandler) error {
-	f.handler = tradeHandler
-	f.errorHandler = errorHandler
+// ID 返回该Stream的唯一ID
+func (f *CSVFile) ID() string {
+	return f.request.ID
+}
+
+// Connect 流式读取CSV文件
+func (f *CSVFile) Connect(ctx context.Context, request *CSVFileRequest) error {
 	f.ctx, f.cancel = context.WithCancel(ctx)
-	files, err := readCSVFileNames(f.dir, f.start, f.end)
+	f.request = request
+	files, err := readCSVFileNames(request.Dir, request.Start, request.End)
 	if err != nil {
 		return fmt.Errorf("read file names error: %w", err)
 	}
@@ -55,9 +67,12 @@ func (f *CSVFile) Stream(ctx context.Context, tradeHandler datafeed.TradeHandler
 	return nil
 }
 
-// Close 关闭CSV数据流
-func (f *CSVFile) Close() error {
+// Disconnect 关闭CSV数据流
+func (f *CSVFile) Disconnect() error {
 	f.cancel()
+	if f.request.CloseHandler != nil {
+		f.request.CloseHandler()
+	}
 	return nil
 }
 
@@ -76,7 +91,7 @@ func (f *CSVFile) readCSVFiles(files []string) {
 			case <-f.ctx.Done():
 				return
 			default:
-				f.handler(event)
+				f.request.Handler(event)
 			}
 		}
 	}()
@@ -91,7 +106,7 @@ func (f *CSVFile) readCSVFiles(files []string) {
 			case <-f.ctx.Done():
 				return
 			default:
-				if err := f.processFile(file, eventChan, f.start, f.end); err != nil {
+				if err := f.processFile(file, eventChan, f.request.Start, f.request.End); err != nil {
 					errorChan <- fmt.Errorf("process file %s error: %w", file, err)
 					return
 				}
@@ -102,8 +117,8 @@ func (f *CSVFile) readCSVFiles(files []string) {
 	// 等待错误或处理完成
 	select {
 	case err := <-errorChan:
-		if f.errorHandler != nil {
-			f.errorHandler(err)
+		if f.request.ErrorHandler != nil {
+			f.request.ErrorHandler(err)
 		}
 	case <-f.ctx.Done():
 		return

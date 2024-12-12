@@ -3,6 +3,7 @@ module github.com/go-gotop/gotop
 go 1.23.4
 
 require (
+	github.com/gorilla/websocket v1.5.3
 	github.com/shopspring/decimal v1.4.0
 	github.com/stretchr/testify v1.10.0
 )

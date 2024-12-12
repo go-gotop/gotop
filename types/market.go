@@ -53,6 +53,7 @@ const (
 // TradeEvent 成交事件
 type TradeEvent struct {
 	// ID 事件ID, 自增id由0开始
+	// 如若需要用到该ID, 则需要自行实现
 	ID uint64
 	// Timestamp 事件时间
 	Timestamp int64
