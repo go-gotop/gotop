@@ -25,6 +25,7 @@ func TestCSVFile_Subscribe(t *testing.T) {
 	tests := []struct {
 		ctx       context.Context
 		name      string
+		id        string
 		start     int64
 		end       int64
 		wantTicks int
@@ -32,6 +33,7 @@ func TestCSVFile_Subscribe(t *testing.T) {
 	}{
 		{
 			name:      "normal_case",
+			id:        "test_stream_1",
 			ctx:       context.Background(),
 			start:     timestamp,             // 使用精确的时间戳
 			end:       timestamp + 1000,      // 包含两个数据点
@@ -40,6 +42,7 @@ func TestCSVFile_Subscribe(t *testing.T) {
 		},
 		{
 			name:      "invalid_time_range",
+			id:        "test_stream_2",
 			ctx:       context.Background(),
 			start:     timestamp + 2000,      // 在所有数据点之后
 			end:       timestamp + 3000,
@@ -84,13 +87,16 @@ func TestCSVFile_Subscribe(t *testing.T) {
 					t.Logf("Received error: %v", err)
 					lastErr = err
 					once.Do(func() {
-							close(done)
-						})
+						close(done)
+					})
+				},
+				CloseHandler: func() {
+					t.Log("Stream closed")
 				},
 			}
 
 			// 连接数据流
-			err := csvFile.Connect(tt.ctx, request)
+			err := csvFile.Connect(tt.ctx, tt.id, request)
 
 			if tt.wantErr {
 				assert.Error(t, err)
@@ -98,6 +104,7 @@ func TestCSVFile_Subscribe(t *testing.T) {
 			}
 
 			assert.NoError(t, err)
+			assert.Equal(t, tt.id, csvFile.ID())
 
 			// 等待处理完成或超时
 			select {
@@ -109,14 +116,19 @@ func TestCSVFile_Subscribe(t *testing.T) {
 
 			mu.Lock()
 			defer mu.Unlock()
+			
+			assert.Equal(t, tt.wantTicks, tradeCount, "Expected %d ticks, got %d", tt.wantTicks, tradeCount)
 			if tradeCount != tt.wantTicks {
-				t.Errorf("Expected %d ticks, got %d. Ticks: %+v", tt.wantTicks, tradeCount, trades)
 				for i, trade := range trades {
 					t.Logf("Tick %d: timestamp=%d, price=%s, size=%s, side=%v", 
 						i, trade.Timestamp, trade.Price, trade.Size, trade.Side)
 				}
 			}
 			assert.Nil(t, lastErr)
+
+			// 测试断开连接
+			err = csvFile.Disconnect()
+			assert.NoError(t, err)
 		})
 	}
 }

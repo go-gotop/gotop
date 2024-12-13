@@ -19,8 +19,6 @@ import (
 
 // CSVFileRequest 请求参数
 type CSVFileRequest struct {
-	// ID 标识唯一性
-	ID string
 	// Dir 数据目录
 	Dir string
 	// Start 开始时间
@@ -37,6 +35,7 @@ type CSVFileRequest struct {
 
 // CSVFile CSV文件逐笔数据流
 type CSVFile struct {
+	id     string
 	ctx    context.Context
 	cancel context.CancelFunc
 	request *CSVFileRequest
@@ -51,11 +50,12 @@ func NewCSVFile() *CSVFile {
 
 // ID 返回该Stream的唯一ID
 func (f *CSVFile) ID() string {
-	return f.request.ID
+	return f.id
 }
 
 // Connect 流式读取CSV文件
-func (f *CSVFile) Connect(ctx context.Context, request *CSVFileRequest) error {
+func (f *CSVFile) Connect(ctx context.Context, id string, request *CSVFileRequest) error {
+	f.id = id
 	f.ctx, f.cancel = context.WithCancel(ctx)
 	f.request = request
 	files, err := readCSVFileNames(request.Dir, request.Start, request.End)

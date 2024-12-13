@@ -3,6 +3,7 @@ package binance
 import (
 	"sync"
 	"time"
+	"context"
 
 	"github.com/gorilla/websocket"
 )
@@ -46,7 +47,8 @@ func (b *BinanceStream) ID() string {
 }
 
 // Connect 实现 Stream 接口，使用 StreamConfig 作为参数类型
-func (b *BinanceStream) Connect(request *BinanceRequest) error {
+func (b *BinanceStream) Connect(ctx context.Context, id string, request *BinanceRequest) error {
+	b.id = id
 	b.request = request
 	conn, _, err := websocket.DefaultDialer.Dial(request.URL, nil)
 	if err != nil {

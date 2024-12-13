@@ -1,5 +1,7 @@
 package types
 
+import "github.com/shopspring/decimal"
+
 // StrategyStatus 策略状态:
 // 1-StrategyStatusRunning, 2-StrategyStatusSuspended
 // 3-StrategyStatusStopped, 4-StrategyStatusFinished
@@ -78,3 +80,88 @@ const (
 	PositioningLevelResistance
 )
 
+// PricePoint 价格点
+type PricePoint struct {
+	// Price 价格
+	Price decimal.Decimal
+	// ID 全局索引起始为0，递增
+	ID uint64
+	// Timestamp 交易时间
+	Timestamp int64
+	// Direction 价格方向: 1-PriceDirectionUp, 2-PriceDirectionDown
+	Direction PriceDirection
+}
+
+// RangeExtremum 区间极值
+type RangeExtremum struct {
+	// PeakPrice 最高价格点
+	PeakPrice PricePoint
+	// ValleyPrice 最低价格点
+	ValleyPrice PricePoint
+}
+
+// IsTrending 是否处于上升趋势
+func (r *RangeExtremum) IsTrending() bool {
+	if r.PeakPrice.Timestamp > r.ValleyPrice.Timestamp {
+		return true
+	}
+	return false
+}
+
+// IsSideways 是否横盘
+func (r *RangeExtremum) IsSideways() bool {
+	return r.PeakPrice.Price.Equal(r.ValleyPrice.Price)
+}
+
+// PriceRange 价格区间
+func(r *RangeExtremum) PriceRange() (PricePoint, PricePoint) {
+	if r.IsTrending() {
+		return r.ValleyPrice, r.PeakPrice
+	}
+	return r.PeakPrice, r.ValleyPrice
+}
+
+// TradeAggregate 交易聚合数据
+type TradeAggregate struct {
+	// SellCount 卖单数量
+	SellCount uint64
+	// BuyCount 买单数量
+	BuyCount uint64
+	// Timestamp 聚合时间戳
+	Timestamp int64
+	// PeakPrice 最高价格点
+	PeakPrice PricePoint
+	// ValleyPrice 最低价格点
+	ValleyPrice PricePoint
+	// CurrentPrice 当前价格点
+	CurrentPrice PricePoint
+	// BuyVolume 买单总量
+	BuyVolume decimal.Decimal
+	// SellVolume 卖单总量
+	SellVolume decimal.Decimal
+	// BuyAmount 买单总额
+	BuyAmount decimal.Decimal
+	// SellAmount 卖单总额
+	SellAmount decimal.Decimal
+}
+
+// IsTrending 是否处于上升趋势
+func (t *TradeAggregate) IsTrending() bool {
+	if t.PeakPrice.Price.GreaterThan(t.ValleyPrice.Price) && t.PeakPrice.Timestamp > t.ValleyPrice.Timestamp {
+		return true
+	}
+	return false
+}
+
+// IsSideways 是否横盘
+func (t *TradeAggregate) IsSideways() bool {
+	return t.PeakPrice.Price.Equal(t.ValleyPrice.Price)
+}
+
+// PriceRange 价格区间
+func(t *TradeAggregate) PriceRange() (PricePoint, PricePoint) {
+	if t.IsTrending() {
+		return t.ValleyPrice, t.PeakPrice
+	}
+	return t.PeakPrice, t.ValleyPrice
+}

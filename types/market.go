@@ -71,10 +71,54 @@ type TradeEvent struct {
 	Type MarketType
 }
 
-type Symbol struct {
-
+type Asset struct {
+	// AssetName 资产名称
+	AssetName string
+	// Exchange 交易所
+	Exchange string
+	// MarketType 市场类型:
+	// 1-MarketTypeSpot, 2-MarketTypeFutures, 3-MarketTypeOptions
+	MarketType MarketType
+	// Free 可用余额
+	Free decimal.Decimal
+	// Locked 锁定余额
+	Locked decimal.Decimal
 }
 
-type Asset struct {
-	
+type Symbol struct {
+	// OriginalSymbol 原标的物名称
+	OriginalSymbol string
+	// UnifiedSymbol 统一标的物名称
+	UnifiedSymbol string
+	// OriginalAsset 原资产名称
+	OriginalAsset string
+	// UnifiedAsset 统一资产名称
+	UnifiedAsset string
+	// 交易所
+	Exchange string
+	// Type 市场类型:
+	// 1-MarketTypeSpot, 2-MarketTypeFutures, 3-MarketTypeOptions
+	Type MarketType
+	// Status 状态: ENABLED, DISABLED
+	Status string
+	// MinSize 最小头寸
+	MinSize decimal.Decimal
+	// MaxSize 最大头寸
+	MaxSize decimal.Decimal
+	// MinPrice 最小价格
+	MinPrice decimal.Decimal
+	// MaxPrice 最大价格
+	MaxPrice decimal.Decimal
+	// PricePrecision 价格精度
+	PricePrecision int32
+	// SizePrecision 头寸精度
+	SizePrecision int32
+	// CtVal 合约面值
+	CtVal decimal.Decimal
+	// CtMult 合约乘数
+	CtMult decimal.Decimal
+	// ListTime 上线时间
+	ListTime int64
+	// ExpTime 下线时间
+	ExpTime int64
 }
