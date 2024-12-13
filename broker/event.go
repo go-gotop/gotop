@@ -1,5 +1,3 @@
 package broker
 
-type StrategySignalEvent struct {
-
-}
+type StrategySignalEvent struct {}
