@@ -1,156 +1,112 @@
 package requests
 
 import (
-    "context"
-    "encoding/json"
-    "net/http"
-    "net/http/httptest"
-    "testing"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 )
 
-func TestHttpClient_DoRequest(t *testing.T) {
-    // 创建测试服务器
-    ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        switch r.URL.Path {
-        case "/success":
-            // 测试成功请求
-            w.WriteHeader(http.StatusOK)
-            json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
-        case "/error":
-            // 测试错误响应
-            w.WriteHeader(http.StatusBadRequest)
-            json.NewEncoder(w).Encode(map[string]string{"error": "bad request"})
-        case "/custom-header":
-            // 测试自定义请求头
-            if r.Header.Get("X-Custom-Header") != "test-value" {
-                w.WriteHeader(http.StatusBadRequest)
-                return
-            }
-            w.WriteHeader(http.StatusOK)
-            json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
-        }
-    }))
-    defer ts.Close()
-
-    tests := []struct {
-        name       string
-        method     string
-        path       string
-        params     interface{}
-        opts       []HttpClientOption
-        wantErr    bool
-        statusCode int
-    }{
-        {
-            name:       "GET success",
-            method:     http.MethodGet,
-            path:       "/success",
-            params:     nil,
-            wantErr:    false,
-            statusCode: http.StatusOK,
-        },
-        {
-            name:       "POST success",
-            method:     http.MethodPost,
-            path:       "/success",
-            params:     map[string]string{"key": "value"},
-            wantErr:    false,
-            statusCode: http.StatusOK,
-        },
-        {
-            name:       "Error response",
-            method:     http.MethodGet,
-            path:       "/error",
-            params:     nil,
-            wantErr:    true,
-            statusCode: http.StatusBadRequest,
-        },
-        {
-            name:   "Custom header",
-            method: http.MethodGet,
-            path:   "/custom-header",
-            opts: []HttpClientOption{
-                WithHeaderSetter(func(req *http.Request, _ interface{}) error {
-                    req.Header.Set("X-Custom-Header", "test-value")
-                    return nil
-                }),
-            },
-            wantErr:    false,
-            statusCode: http.StatusOK,
-        },
-    }
-
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            client := NewHttpClient(tt.opts...)
-            
-            resp, err := client.DoRequest(
-                context.Background(),
-                tt.method,
-                ts.URL+tt.path,
-                tt.params,
-            )
-
-            if (err != nil) != tt.wantErr {
-                t.Errorf("DoRequest() error = %v, wantErr %v", err, tt.wantErr)
-                return
-            }
-
-            if !tt.wantErr && len(resp) == 0 {
-                t.Error("DoRequest() returned empty response for success case")
-            }
-        })
-    }
+// mockAdapter 用于测试的模拟适配器
+type mockAdapter struct {
+	buildFunc func(*Request) (*PreparedRequest, error)
 }
 
-func TestDefaultJSONRequestEncoder(t *testing.T) {
-    tests := []struct {
-        name    string
-        method  string
-        url     string
-        params  interface{}
-        wantErr bool
-    }{
-        {
-            name:    "GET without params",
-            method:  http.MethodGet,
-            url:     "http://example.com",
-            params:  nil,
-            wantErr: false,
-        },
-        {
-            name:    "POST with params",
-            method:  http.MethodPost,
-            url:     "http://example.com",
-            params:  map[string]string{"key": "value"},
-            wantErr: false,
-        },
-        {
-            name:    "Invalid params",
-            method:  http.MethodPost,
-            url:     "http://example.com",
-            params:  make(chan int), // 不可序列化的类型
-            wantErr: true,
-        },
-    }
+func (m *mockAdapter) BuildRequest(req *Request) (*PreparedRequest, error) {
+	return m.buildFunc(req)
+}
 
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            req, err := DefaultJSONRequestEncoder(tt.method, tt.url, tt.params)
-            if (err != nil) != tt.wantErr {
-                t.Errorf("DefaultJSONRequestEncoder() error = %v, wantErr %v", err, tt.wantErr)
-                return
-            }
+func TestClient_DoRequest(t *testing.T) {
+	// 创建测试服务器
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(`{"status":"ok"}`))
+	}))
+	defer server.Close()
 
-            if !tt.wantErr {
-                if req.Method != tt.method {
-                    t.Errorf("DefaultJSONRequestEncoder() method = %v, want %v", req.Method, tt.method)
-                }
+	tests := []struct {
+		name      string
+		setupMock func() ExchangeAdapter
+		request   *Request
+		wantErr   bool
+	}{
+		{
+			name: "Successful request",
+			setupMock: func() ExchangeAdapter {
+				return &mockAdapter{
+					buildFunc: func(req *Request) (*PreparedRequest, error) {
+						return &PreparedRequest{
+							Method:  http.MethodGet,
+							URL:     server.URL,
+							Headers: http.Header{"Content-Type": []string{"application/json"}},
+						}, nil
+					},
+				}
+			},
+			request: &Request{
+				Method: http.MethodGet,
+				URL:    "/test",
+			},
+			wantErr: false,
+		},
+		{
+			name: "No adapter set",
+			setupMock: func() ExchangeAdapter {
+				return nil
+			},
+			request: &Request{
+				Method: http.MethodGet,
+				URL:    "/test",
+			},
+			wantErr: true,
+		},
+	}
 
-                if tt.method == http.MethodPost && req.Header.Get("Content-Type") != "application/json" {
-                    t.Error("DefaultJSONRequestEncoder() Content-Type header not set for POST request")
-                }
-            }
-        })
-    }
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := NewClient()
+			c.SetAdapter(tt.setupMock())
+
+			resp, err := c.DoRequest(tt.request)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DoRequest() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !tt.wantErr {
+				defer resp.Body.Close()
+				body, err := io.ReadAll(resp.Body)
+				if err != nil {
+					t.Errorf("Failed to read response body: %v", err)
+					return
+				}
+
+				if string(body) != `{"status":"ok"}` {
+					t.Errorf("Unexpected response body: %s", string(body))
+				}
+			}
+		})
+	}
+}
+
+func TestClient_SetAdapter(t *testing.T) {
+	c := NewClient()
+	ma := &mockAdapter{}
+	c.SetAdapter(ma)
+
+	clientImpl := c.(*client)
+	if clientImpl.adapter != ma {
+		t.Error("SetAdapter did not set the adapter correctly")
+	}
+}
+
+func TestClient_SetHTTPClient(t *testing.T) {
+	c := NewClient()
+	customClient := &http.Client{}
+	c.SetHTTPClient(customClient)
+
+	clientImpl := c.(*client)
+	if clientImpl.httpClient != customClient {
+		t.Error("SetHTTPClient did not set the HTTP client correctly")
+	}
 } 

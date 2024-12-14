@@ -1,114 +1,106 @@
 package requests
 
 import (
-    "context"
-    "encoding/json"
-    "errors"
-    "io"
-    "net/http"
-
-    "strings"
-    "time"
+	"bytes"
+	"errors"
+	"net/http"
 )
 
-// HttpClient 定义通用的HTTP调用接口
-type HttpClient interface {
-	// DoRequest 执行HTTP请求
-    DoRequest(ctx context.Context, method, url string, params interface{}) ([]byte, error)
+// AuthInfo 包含每次请求所需的 API Key 和 Secret Key 和 Passphrase。
+type AuthInfo struct {
+	APIKey     string
+	SecretKey  string
+	Passphrase string
 }
 
-// 策略类型定义
-// RequestSigner 请求签名
-type RequestSigner func(req *http.Request, params interface{}) error
-// ErrorHandler 错误处理
-type ErrorHandler func(statusCode int, body []byte) error
-// HeaderSetter 设置请求头
-type HeaderSetter func(req *http.Request, params interface{}) error
-// RequestEncoder 请求编码
-type RequestEncoder func(method string, urlStr string, params interface{}) (*http.Request, error)
-
-// DefaultJSONRequestEncoder 是默认的JSON编码器
-func DefaultJSONRequestEncoder(method, urlStr string, params interface{}) (*http.Request, error) {
-    var body io.Reader
-    if params != nil {
-        data, err := json.Marshal(params)
-        if err != nil {
-            return nil, err
-        }
-        body = strings.NewReader(string(data))
-    }
-
-    req, err := http.NewRequest(method, urlStr, body)
-    if err != nil {
-        return nil, err
-    }
-
-    if method == http.MethodPost || method == http.MethodPut {
-        req.Header.Set("Content-Type", "application/json")
-    }
-
-    return req, nil
+// Request 表示一个完整的请求，包括方法、URL、业务参数以及鉴权信息。
+type Request struct {
+	Method string
+	URL    string
+	Params map[string]interface{}
+	Auth   *AuthInfo
 }
 
-type httpClientImpl struct {
-    client         *http.Client
-    signer         RequestSigner
-    errorHandler   ErrorHandler
-    headerSetter   HeaderSetter
-    requestEncoder RequestEncoder
+// PreparedRequest 代表一个已经构建好的HTTP请求参数，包含方法、完整URL、请求头、以及请求体。
+// ExchangeAdapter 将直接返回此对象，以供 HttpClient 直接发送。
+type PreparedRequest struct {
+	Method  string
+	URL     string
+	Headers http.Header
+	Body    []byte
 }
 
-// NewHttpClient 创建一个可定制化的HttpClient
-func NewHttpClient(opts ...HttpClientOption) HttpClient {
-    c := &httpClientImpl{
-        client: &http.Client{
-            Timeout: 10 * time.Second,
-        },
-        requestEncoder: DefaultJSONRequestEncoder,
-    }
-    for _, opt := range opts {
-        opt(c)
-    }
-    return c
+// ExchangeAdapter 接口由各交易所自行实现，用于构建该交易所特定要求的请求。
+// 用户在业务代码中为每个交易所提供自己的Adapter实现。
+type ExchangeAdapter interface {
+	// BuildRequest 根据输入参数构建一个完整的 PreparedRequest。
+	// 内部完成：URL拼接、查询参数处理、Headers构建、签名注入、请求体序列化等所有定制逻辑。
+	BuildRequest(req *Request) (*PreparedRequest, error)
 }
 
-// DoRequest 执行HTTP请求
-func (c *httpClientImpl) DoRequest(ctx context.Context, method, urlStr string, params interface{}) ([]byte, error) {
-    req, err := c.requestEncoder(method, urlStr, params)
-    if err != nil {
-        return nil, err
-    }
-    req = req.WithContext(ctx)
+// RequestClient 定义了通用的HTTP客户端接口。
+// 只负责调用 ExchangeAdapter 构建请求，并通过 net/http.Client 实际发送请求。
+type RequestClient interface {
+	// DoRequest 使用注入的Adapter构建请求并发送。
+	// 返回的 *http.Response 由调用者自行读取和处理。
+	DoRequest(req *Request) (*http.Response, error)
 
-    if c.headerSetter != nil {
-        if err := c.headerSetter(req, params); err != nil {
-            return nil, err
-        }
-    }
+	// SetAdapter 注入适配器，不同交易所使用不同的Adapter实现。
+	SetAdapter(adapter ExchangeAdapter)
 
-    if c.signer != nil {
-        if err := c.signer(req, params); err != nil {
-            return nil, err
-        }
-    }
+	// 可选地设置HTTP客户端（如超时、代理等）
+	SetHTTPClient(client *http.Client)
+}
 
-    resp, err := c.client.Do(req)
-    if err != nil {
-        return nil, err
-    }
-    defer resp.Body.Close()
+// client 是 RequestClient 的默认实现，使用默认的http.Client。
+type client struct {
+	adapter    ExchangeAdapter
+	httpClient *http.Client
+}
 
-    body, err := io.ReadAll(resp.Body)
-    if err != nil {
-        return nil, err
-    }
+// NewClient 创建一个新的HttpClient实例，并使用默认的http.Client。
+func NewClient() RequestClient {
+	return &client{
+		httpClient: http.DefaultClient,
+	}
+}
 
-    if resp.StatusCode < 200 || resp.StatusCode > 299 {
-        if c.errorHandler != nil {
-            return nil, c.errorHandler(resp.StatusCode, body)
-        }
-        return nil, errors.New("http error: " + resp.Status)
-    }
+// SetAdapter 注入适配器，不同交易所使用不同的Adapter实现。
+func (c *client) SetAdapter(adapter ExchangeAdapter) {
+	c.adapter = adapter
+}
 
-    return body, nil
+// SetHTTPClient 可选地设置HTTP客户端（如超时、代理等）
+func (c *client) SetHTTPClient(hc *http.Client) {
+	c.httpClient = hc
+}
+
+// DoRequest 使用已设置的Adapter构建请求，然后通过http.Client发送请求。
+func (c *client) DoRequest(r *Request) (*http.Response, error) {
+	if c.adapter == nil {
+		return nil, errors.New("no adapter set")
+	}
+
+	prepared, err := c.adapter.BuildRequest(r)
+	if err != nil {
+		return nil, err
+	}
+
+	// 构建http.Request
+	req, err := http.NewRequest(prepared.Method, prepared.URL, bytes.NewReader(prepared.Body))
+	if err != nil {
+		return nil, err
+	}
+
+	if prepared.Headers != nil {
+		req.Header = prepared.Headers
+	}
+
+	// 通过http.Client发送请求
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
 }

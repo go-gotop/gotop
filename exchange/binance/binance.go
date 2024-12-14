@@ -9,13 +9,14 @@ import (
 )
 
 // NewBinanceExchange 创建 BinanceExchange
-func NewBinanceExchange(client requests.HttpClient) *BinanceExchange {
+func NewBinanceExchange() *BinanceExchange {
+	client := requests.NewClient()
 	return &BinanceExchange{client: client}
 }
 
 // BinanceExchange 是 Binance 交易所的实现
 type BinanceExchange struct {
-	client requests.HttpClient
+	client requests.RequestClient
 }
 
 // Name 交易所名称
