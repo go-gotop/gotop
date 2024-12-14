@@ -74,28 +74,5 @@ func (b *BinanceAlgorithm) Check(key string) (limiter.RateLimitDecision, error) 
 }
 
 func (b *BinanceAlgorithm) Record(key string) error {
-    // 记录本次请求，将计数+1，并设置过期时间
-    var window time.Duration
-    var limit int
-    now := time.Now()
-
-    if key == "binance:global:http" {
-        window = time.Second
-        limit = 10
-    } else if len(key) > len("binance:api_key:") && key[:len("binance:api_key:")] == "binance:api_key:" {
-        window = time.Minute
-        limit = 1200
-    } else {
-        // 不认识的key不处理
-        return nil
-    }
-
-    count := b.counters[key]
-    count++
-    b.counters[key] = count
-
-    // 设置过期时间为当前时间+窗口，这样窗口到了后重新计数
-    b.expiries[key] = now.Add(window)
-
     return nil
 }

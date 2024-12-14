@@ -80,6 +80,20 @@ const (
 	PositioningLevelResistance
 )
 
+// StrategySignal 策略信号
+type StrategySignal struct {
+	// Price 价格
+	Price decimal.Decimal
+	// Size 头寸大小
+	Size decimal.Decimal
+	// Side 方向: 1-SideBuy, 2-SideSell
+	Side SideType
+	// OrderType 订单类型: 1-OrderTypeMarket, 2-OrderTypeLimit
+	OrderType OrderType
+	// PositionSide 持仓方向: 1-PositionSideLong, 2-PositionSideShort
+	PositionSide PositionSide
+}
+
 // PricePoint 价格点
 type PricePoint struct {
 	// Price 价格
