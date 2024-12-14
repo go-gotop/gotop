@@ -52,6 +52,7 @@ type RequestClient interface {
 	SetHTTPClient(client *http.Client)
 }
 
+// client 是 RequestClient 的默认实现，使用默认的http.Client。
 type client struct {
 	adapter    ExchangeAdapter
 	httpClient *http.Client
@@ -64,10 +65,12 @@ func NewClient() RequestClient {
 	}
 }
 
+// SetAdapter 注入适配器，不同交易所使用不同的Adapter实现。
 func (c *client) SetAdapter(adapter ExchangeAdapter) {
 	c.adapter = adapter
 }
 
+// SetHTTPClient 可选地设置HTTP客户端（如超时、代理等）
 func (c *client) SetHTTPClient(hc *http.Client) {
 	c.httpClient = hc
 }
