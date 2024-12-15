@@ -1,6 +1,11 @@
 package types
 
-import "github.com/shopspring/decimal"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/shopspring/decimal"
+)
 
 const (
 	// BinanceExchange 币安
@@ -25,30 +30,116 @@ const (
 	BySystem = "SYSTEM"
 )
 
-// MarketType 市场类型: 1-MarketTypeSpot, 2-MarketTypeFutures, 3-MarketTypeOptions
+// MarketType 市场类型  
+// 可扩展为：  
+// 1. SPOT: 现货市场  
+// 2. MARGIN: 杠杆/保证金市场  
+// 3. FUTURES_USD_MARGINED: U本位期货（如 Binance USDT-M合约）
+// 4. FUTURES_COIN_MARGINED: 币本位期货（如 Binance COIN-M合约）
+// 5. PERPETUAL_USD_MARGINED: U本位永续合约
+// 6. PERPETUAL_COIN_MARGINED: 币本位永续合约
+// 7. OPTIONS: 期权市场
+// 8. LEVERAGED_TOKENS: 杠杆代币
+// 9. P2P: 点对点市场
+// 10. ETF: ETF类产品市场
+// 11. NFT: NFT数字藏品市场
 type MarketType int
+
+const (
+	MarketTypeSpot MarketType = iota + 1
+	MarketTypeMargin
+	MarketTypeFuturesUSDMargined    // U本位期货
+	MarketTypeFuturesCoinMargined   // 币本位期货
+	MarketTypePerpetualUSDMargined  // U本位永续
+	MarketTypePerpetualCoinMargined // 币本位永续
+	MarketTypeOptions
+	MarketTypeLeveragedTokens
+	MarketTypeP2P
+	MarketTypeETF
+	MarketTypeNFT
+)
 
 // String 返回字符串表示
 func (m MarketType) String() string {
 	switch m {
 	case MarketTypeSpot:
 		return "SPOT"
-	case MarketTypeFutures:
-		return "FUTURES"
+	case MarketTypeMargin:
+		return "MARGIN"
+	case MarketTypeFuturesUSDMargined:
+		return "FUTURES_USD_MARGINED"
+	case MarketTypeFuturesCoinMargined:
+		return "FUTURES_COIN_MARGINED"
+	case MarketTypePerpetualUSDMargined:
+		return "PERPETUAL_USD_MARGINED"
+	case MarketTypePerpetualCoinMargined:
+		return "PERPETUAL_COIN_MARGINED"
 	case MarketTypeOptions:
 		return "OPTIONS"
+	case MarketTypeLeveragedTokens:
+		return "LEVERAGED_TOKENS"
+	case MarketTypeP2P:
+		return "P2P"
+	case MarketTypeETF:
+		return "ETF"
+	case MarketTypeNFT:
+		return "NFT"
+	default:
+		return ""
 	}
-	return ""
 }
 
-const (
-	// MarketTypeSpot 现货市场
-	MarketTypeSpot MarketType = iota + 1
-	// MarketTypeFutures 期货市场
-	MarketTypeFutures
-	// MarketTypeOptions 期权市场
-	MarketTypeOptions
-)
+// IsValid 判断 MarketType 是否为已定义的类型
+func (m MarketType) IsValid() bool {
+	switch m {
+	case MarketTypeSpot,
+		MarketTypeMargin,
+		MarketTypeFuturesUSDMargined,
+		MarketTypeFuturesCoinMargined,
+		MarketTypePerpetualUSDMargined,
+		MarketTypePerpetualCoinMargined,
+		MarketTypeOptions,
+		MarketTypeLeveragedTokens,
+		MarketTypeP2P,
+		MarketTypeETF,
+		MarketTypeNFT:
+		return true
+	default:
+		return false
+	}
+}
+
+// ParseMarketType 从字符串解析 MarketType (不区分大小写)
+func ParseMarketType(s string) (MarketType, error) {
+	s = strings.ToUpper(strings.TrimSpace(s))
+	switch s {
+	case "SPOT":
+		return MarketTypeSpot, nil
+	case "MARGIN":
+		return MarketTypeMargin, nil
+	case "FUTURES_USD_MARGINED":
+		return MarketTypeFuturesUSDMargined, nil
+	case "FUTURES_COIN_MARGINED":
+		return MarketTypeFuturesCoinMargined, nil
+	case "PERPETUAL_USD_MARGINED":
+		return MarketTypePerpetualUSDMargined, nil
+	case "PERPETUAL_COIN_MARGINED":
+		return MarketTypePerpetualCoinMargined, nil
+	case "OPTIONS":
+		return MarketTypeOptions, nil
+	case "LEVERAGED_TOKENS":
+		return MarketTypeLeveragedTokens, nil
+	case "P2P":
+		return MarketTypeP2P, nil
+	case "ETF":
+		return MarketTypeETF, nil
+	case "NFT":
+		return MarketTypeNFT, nil
+	default:
+		return 0, fmt.Errorf("unknown market type: %s", s)
+	}
+}
+
 
 // TradeEvent 成交事件
 type TradeEvent struct {

@@ -3,7 +3,7 @@ package binance
 import (
     "time"
 
-    "github.com/go-gotop/gotop/limiter"	
+    "github.com/go-gotop/gotop/ratelimiter"	
 )
 
 // BinanceAlgorithm 是一个针对binance键的限流算法
@@ -22,7 +22,7 @@ func NewBinanceAlgorithm() *BinanceAlgorithm {
     }
 }
 
-func (b *BinanceAlgorithm) Check(key string) (limiter.RateLimitDecision, error) {
+func (b *BinanceAlgorithm) Check(key string) (ratelimiter.RateLimitDecision, error) {
     // 判定规则示例：
     // global key: "binance:global:http"
     //   - 时间窗口：1秒
@@ -48,7 +48,7 @@ func (b *BinanceAlgorithm) Check(key string) (limiter.RateLimitDecision, error) 
         limit = 1200
     } else {
         // 不认识的key不处理，直接允许
-        return limiter.RateLimitDecision{Allowed: true}, nil
+        return ratelimiter.RateLimitDecision{Allowed: true}, nil
     }
 
     // 清理过期
@@ -66,7 +66,7 @@ func (b *BinanceAlgorithm) Check(key string) (limiter.RateLimitDecision, error) 
         reason = "rate limit exceeded"
     }
 
-    return limiter.RateLimitDecision{
+    return ratelimiter.RateLimitDecision{
         Allowed:    allowed,
         RetryAfter: retryAfter,
         Reason:     reason,
