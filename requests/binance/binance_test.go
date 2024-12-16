@@ -9,7 +9,7 @@ import (
 )
 
 func TestBinanceAdapter_BuildRequest(t *testing.T) {
-	adapter := NewBinanceAdapter("https://api.binance.com")
+	adapter := NewBinanceAdapter()
 
 	tests := []struct {
 		name        string
