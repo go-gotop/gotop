@@ -23,7 +23,7 @@ type BinanceAdapter struct {
 
 }
 
-func NewBinanceAdapter(baseURL string) *BinanceAdapter {
+func NewBinanceAdapter() *BinanceAdapter {
 	return &BinanceAdapter{
 
 	}
