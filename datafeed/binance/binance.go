@@ -83,9 +83,9 @@ func (b *BinanceDataFeed) TradeStream(ctx context.Context, id string, request Bi
 	var url string
 	switch request.Market {
 	case types.MarketTypeSpot:
-		url = fmt.Sprintf("/%s/%s@trade", spotWSURL, strings.ToLower(request.Symbol))
+		url = fmt.Sprintf("%s/%s@trade", spotWSURL, strings.ToLower(request.Symbol))
 	case types.MarketTypeFuturesUSDMargined:
-		url = fmt.Sprintf("/%s/%s@aggTrade", futuresWSURL, strings.ToLower(request.Symbol))
+		url = fmt.Sprintf("%s/%s@aggTrade", futuresWSURL, strings.ToLower(request.Symbol))
 	default:
 		return fmt.Errorf("invalid market type: %v", request.Market)
 	}
