@@ -85,30 +85,30 @@ func NewPublisher(logger *log.Helper, opts ...broker.Option) (broker.Publisher, 
 //	        "type": "greeting"
 //	    },
 //	)
-func (p *kafkaPublisher) Publish(ctx context.Context, topic string, key []byte, value []byte, headers map[string]string, opts ...broker.Option) error {
+func (p *kafkaPublisher) Publish(ctx context.Context, message *broker.Message, opts ...broker.Option) error {
 	// 消息构建
 	msg := kafkaGo.Message{
-		Topic: topic,
-		Value: value,
+		Topic: message.Topic,
+		Value: message.Value,
 	}
 
-	if headers != nil {
-		for k, v := range headers {
+	if message.Headers != nil {
+		for k, v := range message.Headers {
 			msg.Headers = append(msg.Headers, kafkaGo.Header{Key: k, Value: []byte(v)})
 		}
 	}
 
-	if key != nil {
-		msg.Key = key
+	if message.Key != "" {
+		msg.Key = []byte(message.Key)
 	}
 
 	// 获取写入器
 	var cached bool
 	p.Lock()
-	writer, ok := p.writer.Writers[topic]
+	writer, ok := p.writer.Writers[message.Topic]
 	if !ok {
 		writer = p.writer.CreateProducer(p.writerConfig, p.saslMechanism, p.tlsConfig)
-		p.writer.Writers[topic] = writer
+		p.writer.Writers[message.Topic] = writer
 	} else {
 		cached = true
 	}

@@ -136,7 +136,7 @@ func (s *kafkaSubscriber) subscribe(ctx context.Context, topic string, handler b
 
 				m := &broker.Message{
 					Topic: msg.Topic,
-					Key:   msg.Key,
+					Key:   string(msg.Key),
 					Value: msg.Value,
 				}
 

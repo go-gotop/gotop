@@ -6,7 +6,7 @@ import "context"
 // Value为消息内容主体，Key为可选的用于路由/分区的键，Topic表示逻辑上的主题/频道。
 // Metadata则是实现方可选填充的元数据，用于区别实现的特定属性（例如：Kafka的Offset、Partition、Redis的Stream ID等）。
 type Message struct {
-	Key      []byte
+	Key      string
 	Value    []byte
 	Topic    string
 	Headers  map[string]string
@@ -24,7 +24,7 @@ type MessageHandler interface {
 type Publisher interface {
 	// Publish发布消息到指定的主题（或通道）。
 	// 返回错误用于告知发布失败，具体重试策略由上层或底层实现负责。
-	Publish(ctx context.Context, topic string, key []byte, value []byte, headers map[string]string, opts ...Option) error
+	Publish(ctx context.Context, message *Message, opts ...Option) error
 
 	// Close用于释放发布者相关资源。
 	Close() error
