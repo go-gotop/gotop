@@ -22,12 +22,14 @@ func (s StrategyStatus) String() string {
 	case StrategyStatusError:
 		return "ERROR"
 	}
-	return ""
+	return "UNKNOWN"
 }
 
 const (
+	// StrategyStatusUnknown 未知
+	StrategyStatusUnknown StrategyStatus = iota
 	// StrategyStatusRunning 运行中
-	StrategyStatusRunning StrategyStatus = iota + 1
+	StrategyStatusRunning
 	// StrategyStatusSuspended 挂起
 	StrategyStatusSuspended
 	// StrategyStatusStopped 停止
@@ -49,12 +51,14 @@ func (p PriceDirection) String() string {
 	case PriceDirectionDown:
 		return "DOWN"
 	}
-	return ""
+	return "UNKNOWN"
 }
 
 const (
+	// PriceDirectionUnknown 未知
+	PriceDirectionUnknown PriceDirection = iota
 	// PriceDirectionUp 向上
-	PriceDirectionUp PriceDirection = iota + 1
+	PriceDirectionUp
 	// PriceDirectionDown 向下
 	PriceDirectionDown
 )
@@ -70,12 +74,14 @@ func (p PositioningLevel) String() string {
 	case PositioningLevelResistance:
 		return "RESISTANCE"
 	}
-	return ""
+	return "UNKNOWN"
 }
 
 const (
+	// PositioningLevelUnknown 未知
+	PositioningLevelUnknown PositioningLevel = iota
 	// PositioningLevelSupport 支撑
-	PositioningLevelSupport PositioningLevel = iota + 1
+	PositioningLevelSupport
 	// PositioningLevelResistance 阻力
 	PositioningLevelResistance
 )
@@ -116,10 +122,7 @@ type RangeExtremum struct {
 
 // IsTrending 是否处于上升趋势
 func (r *RangeExtremum) IsTrending() bool {
-	if r.PeakPrice.Timestamp > r.ValleyPrice.Timestamp {
-		return true
-	}
-	return false
+	return r.PeakPrice.Timestamp > r.ValleyPrice.Timestamp
 }
 
 // IsSideways 是否横盘
