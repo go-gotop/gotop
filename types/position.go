@@ -11,12 +11,14 @@ func (o OrderType) String() string {
 	case OrderTypeLimit:
 		return "LIMIT"
 	}
-	return ""
+	return "UNKNOWN"
 }
 
 const (
+	// OrderTypeUnknown 未知
+	OrderTypeUnknown OrderType = iota
 	// OrderTypeMarket 市价单
-	OrderTypeMarket OrderType = iota + 1
+	OrderTypeMarket
 	// OrderTypeLimit 限价单
 	OrderTypeLimit
 )
@@ -40,12 +42,14 @@ func (p PositionStatus) String() string {
 	case ClosedPosition:
 		return "CLOSED"
 	}
-	return ""
+	return "UNKNOWN"
 }
 
 const (
+	// PositionStatusUnknown 未知
+	PositionStatusUnknown PositionStatus = iota
 	// NewPosition 新开仓
-	NewPosition PositionStatus = iota + 1
+	NewPosition
 	// OpeningPosition 开仓中
 	OpeningPosition
 	// HoldingPosition 持仓中
@@ -67,12 +71,14 @@ func (s SideType) String() string {
 	case SideTypeSell:
 		return "SELL"
 	}
-	return ""
+	return "UNKNOWN"
 }
 
 const (
+	// SideTypeUnknown 未知
+	SideTypeUnknown SideType = iota
 	// SideTypeBuy 买入
-	SideTypeBuy SideType = iota + 1
+	SideTypeBuy
 	// SideTypeSell 卖出
 	SideTypeSell
 )
@@ -88,12 +94,14 @@ func (p PositionSide) String() string {
 	case PositionSideShort:
 		return "SHORT"
 	}
-	return ""
+	return "UNKNOWN"
 }
 
 const (
+	// PositionSideUnknown 未知
+	PositionSideUnknown PositionSide = iota
 	// PositionSideLong 多头
-	PositionSideLong PositionSide = iota + 1
+	PositionSideLong
 	// PositionSideShort 空头
 	PositionSideShort
 )
@@ -111,12 +119,14 @@ func (t TimeInForce) String() string {
 	case TimeInForceFOK:
 		return "FOK"
 	}
-	return ""
+	return "UNKNOWN"
 }
 
 const (
+	// TimeInForceUnknown 未知
+	TimeInForceUnknown TimeInForce = iota
 	// TimeInForceGTC 成交为止
-	TimeInForceGTC TimeInForce = iota + 1
+	TimeInForceGTC
 	// TimeInForceIOC 立即成交或取消
 	TimeInForceIOC
 	// TimeInForceFOK 全部成交或立即取消
@@ -140,12 +150,14 @@ func (o OrderStatus) String() string {
 	case OrderStatusCanceled:
 		return "CANCELED"
 	}
-	return ""
+	return "UNKNOWN"
 }
 
 const (
+	// OrderStatusUnknown 未知
+	OrderStatusUnknown OrderStatus = iota
 	// OrderStatusNew 新订单
-	OrderStatusNew OrderStatus = iota + 1
+	OrderStatusNew
 	// OrderStatusPartiallyFilled 部分成交
 	OrderStatusPartiallyFilled
 	// OrderStatusFilled 全部成交
