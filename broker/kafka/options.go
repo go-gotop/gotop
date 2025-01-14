@@ -237,7 +237,87 @@ func WithAllowPublishAutoTopicCreation(allow bool) broker.Option {
 
 ////////////////////////////////////////////////////////////
 
-type SubscriberOption func(*subscriberOptions)
+// 自动提交消息确认
+func WithAutoAck(autoAck bool) broker.Option {
+	return broker.OptionsContextWithValue(autoAckKey{}, autoAck)
+}
 
-type subscriberOptions struct {
+// 设置消息队列
+func WithQueue(queue string) broker.Option {
+	return broker.OptionsContextWithValue(queueKey{}, queue)
+}
+
+// 设置队列容量
+func WithQueueCapacity(capacity int) broker.Option {
+	return broker.OptionsContextWithValue(queueCapacityKey{}, capacity)
+}
+
+// 每次拉取消息的最小字节数
+func WithMinBytes(minBytes int) broker.Option {
+	return broker.OptionsContextWithValue(minBytesKey{}, minBytes)
+}
+
+// 每次拉取消息的最大字节数
+func WithMaxBytes(maxBytes int) broker.Option {
+	return broker.OptionsContextWithValue(maxBytesKey{}, maxBytes)
+}
+
+// 等待拉取消息的最大时间
+func WithMaxWait(maxWait time.Duration) broker.Option {
+	return broker.OptionsContextWithValue(maxWaitKey{}, maxWait)
+}
+
+// 读取延迟检查间隔
+func WithReadLagInterval(interval time.Duration) broker.Option {
+	return broker.OptionsContextWithValue(readLagIntervalKey{}, interval)
+}
+
+// 心跳间隔时间
+func WithHeartbeatInterval(interval time.Duration) broker.Option {
+	return broker.OptionsContextWithValue(heartbeatIntervalKey{}, interval)
+}
+
+// 提交offset的时间间隔
+func WithCommitInterval(interval time.Duration) broker.Option {
+	return broker.OptionsContextWithValue(commitIntervalKey{}, interval)
+}
+
+// 分区监控检查间隔
+func WithPartitionWatchInterval(interval time.Duration) broker.Option {
+	return broker.OptionsContextWithValue(partitionWatchIntervalKey{}, interval)
+}
+
+// 是否监控分区变化
+func WithWatchPartitionChanges(watch bool) broker.Option {
+	return broker.OptionsContextWithValue(watchPartitionChangesKey{}, watch)
+}
+
+// 会话超时时间
+func WithSessionTimeout(timeout time.Duration) broker.Option {
+	return broker.OptionsContextWithValue(sessionTimeoutKey{}, timeout)
+}
+
+// 重平衡超时时间
+func WithRebalanceTimeout(timeout time.Duration) broker.Option {
+	return broker.OptionsContextWithValue(rebalanceTimeoutKey{}, timeout)
+}
+
+// 消息保留时间
+func WithRetentionTime(retention time.Duration) broker.Option {
+	return broker.OptionsContextWithValue(retentionTimeKey{}, retention)
+}
+
+// 起始偏移量
+func WithStartOffset(offset int64) broker.Option {
+	return broker.OptionsContextWithValue(startOffsetKey{}, offset)
+}
+
+// 拨号器配置
+func WithDialerConfig(config *tls.Config) broker.Option {
+	return broker.OptionsContextWithValue(dialerConfigKey{}, config)
+}
+
+// 拨号超时时间
+func WithDialerTimeout(timeout time.Duration) broker.Option {
+	return broker.OptionsContextWithValue(dialerTimeoutKey{}, timeout)
 }

@@ -16,7 +16,7 @@ type Message struct {
 // MessageHandler 用于上层业务处理消息的回调接口。
 // 不同的底层实现可以在调用此方法前后进行Offset提交、Ack确认等动作，但上层并不需要感知。
 type MessageHandler interface {
-	HandleMessage(msg *Message) error
+	HandleMessage(ctx context.Context, msg *Message) error
 }
 
 // Publisher 定义通用的消息发布者接口。

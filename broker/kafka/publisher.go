@@ -27,7 +27,7 @@ type kafkaPublisher struct {
 
 	saslMechanism sasl.Mechanism
 	tlsConfig     *tls.Config
-
+	// 不同主题对应不同写入器
 	writer         *Writer
 	writerConfig   WriterConfig
 	producerTracer *tracing.Tracer
@@ -121,7 +121,7 @@ func (p *kafkaPublisher) Publish(ctx context.Context, topic string, key []byte, 
 	defer p.finishProducerSpan(span, int32(msg.Partition), 0, err)
 
 	// 写入消息
-	err = p.writer.Writer.WriteMessages(ctx, msg)
+	err = writer.WriteMessages(ctx, msg)
 	if err != nil {
 		p.logger.Errorf("WriteMessages error: %s", err.Error())
 		err = p.handleWriterError(ctx, err, cached, msg, writer)
