@@ -2,23 +2,29 @@ package kafka
 
 import (
 	"github.com/go-gotop/gotop/broker"
+	"github.com/go-kratos/kratos/v2/log"
 )
 
 type kafkaBroker struct {
-	publisher  *kafkaPublisher
-	subscriber *kafkaSubscriber
+	publisher  broker.Publisher
+	subscriber broker.Subscriber
 }
 
-func NewBroker(options ...BrokerOption) (broker.Broker, error) {
-	bo := &brokerOptions{}
+func NewBroker(logger *log.Helper, options ...broker.Option) (broker.Broker, error) {
 
-	for _, opt := range options {
-		opt(bo)
+	kp, err := NewPublisher(logger, options...)
+	if err != nil {
+		return nil, err
+	}
+
+	ks, err := NewSubscriber(logger, options...)
+	if err != nil {
+		return nil, err
 	}
 
 	return &kafkaBroker{
-		publisher:  bo.Publisher,
-		subscriber: bo.Subscriber,
+		publisher:  kp,
+		subscriber: ks,
 	}, nil
 }
 

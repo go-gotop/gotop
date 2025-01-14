@@ -72,27 +72,6 @@ type balancerValue struct {
 	Hasher     hash.Hash32
 }
 
-type BrokerOption func(*brokerOptions)
-
-type brokerOptions struct {
-	Publisher  *kafkaPublisher
-	Subscriber *kafkaSubscriber
-}
-
-// WithPublisher 设置Kafka发布者实例
-func WithPublisher(pub *kafkaPublisher) BrokerOption {
-	return func(bo *brokerOptions) {
-		bo.Publisher = pub
-	}
-}
-
-// WithSubscriber 设置Kafka订阅者实例
-func WithSubscriber(sub *kafkaSubscriber) BrokerOption {
-	return func(bo *brokerOptions) {
-		bo.Subscriber = sub
-	}
-}
-
 // //////////////////////////////////////////////////////////
 
 // WithAddrs 设置Kafka集群的broker地址列表

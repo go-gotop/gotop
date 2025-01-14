@@ -14,7 +14,9 @@ type Option func(*Options)
 
 func (o *Options) Apply(opts ...Option) {
 	for _, opt := range opts {
-		opt(o)
+		if opt != nil {
+			opt(o)
+		}
 	}
 }
 
