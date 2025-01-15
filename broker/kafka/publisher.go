@@ -4,8 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	"log"
-	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -32,15 +30,9 @@ type kafkaPublisher struct {
 	writer         *Writer
 	writerConfig   WriterConfig
 	producerTracer *tracing.Tracer
-
-	logger *log.Logger
 }
 
-func NewPublisher(logger *log.Logger, opts ...broker.Option) (broker.Publisher, error) {
-	if logger == nil {
-		logger = log.New(os.Stderr, "", log.LstdFlags)
-	}
-
+func NewPublisher(opts ...broker.Option) (broker.Publisher, error) {
 	po := broker.NewOptions(opts...)
 
 	kp := &kafkaPublisher{
@@ -48,12 +40,9 @@ func NewPublisher(logger *log.Logger, opts ...broker.Option) (broker.Publisher, 
 		writerConfig: WriterConfig{
 			Brokers:      []string{},
 			Balancer:     &kafkaGo.LeastBytes{},
-			Logger:       nil,
-			ErrorLogger:  &ErrorLogger{logger: logger},
 			BatchTimeout: 10 * time.Millisecond,
 			Async:        true, // 异步发送，不等待异常响应
 		},
-		logger: logger,
 	}
 
 	// 应用初始化配置
@@ -128,7 +117,6 @@ func (p *kafkaPublisher) Publish(ctx context.Context, message *broker.Message, o
 	// 写入消息
 	err = writer.WriteMessages(ctx, msg)
 	if err != nil {
-		p.logger.Printf("WriteMessages error: %s", err.Error())
 		err = p.handleWriterError(ctx, err, cached, msg, writer)
 	}
 	return err

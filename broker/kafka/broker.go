@@ -1,8 +1,6 @@
 package kafka
 
 import (
-	"log"
-
 	"github.com/go-gotop/gotop/broker"
 )
 
@@ -11,14 +9,14 @@ type kafkaBroker struct {
 	subscriber broker.Subscriber
 }
 
-func NewBroker(logger *log.Logger, options ...broker.Option) (broker.Broker, error) {
+func NewBroker(options ...broker.Option) (broker.Broker, error) {
 
-	kp, err := NewPublisher(logger, options...)
+	kp, err := NewPublisher(options...)
 	if err != nil {
 		return nil, err
 	}
 
-	ks, err := NewSubscriber(logger, options...)
+	ks, err := NewSubscriber(options...)
 	if err != nil {
 		return nil, err
 	}

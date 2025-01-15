@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"io"
-	"log"
 	"strconv"
 	"sync"
 	"time"
@@ -42,10 +41,9 @@ type kafkaSubscriber struct {
 	tlsConfig      *tls.Config
 	options        *broker.Options
 	stopCh         chan struct{}
-	logger         *log.Logger
 }
 
-func NewSubscriber(logger *log.Logger, opts ...broker.Option) (broker.Subscriber, error) {
+func NewSubscriber(opts ...broker.Option) (broker.Subscriber, error) {
 	po := broker.NewOptions(opts...)
 
 	ks := &kafkaSubscriber{
@@ -53,11 +51,8 @@ func NewSubscriber(logger *log.Logger, opts ...broker.Option) (broker.Subscriber
 		readerConfig: kafkaGo.ReaderConfig{
 			WatchPartitionChanges: true,
 			MaxWait:               500 * time.Millisecond,
-			Logger:                nil,
-			ErrorLogger:           &ErrorLogger{logger: logger},
 		},
 		options: &po,
-		logger:  logger,
 		stopCh:  make(chan struct{}),
 	}
 
@@ -127,7 +122,6 @@ func (s *kafkaSubscriber) subscribe(ctx context.Context, topic string, handler b
 					if errors.Is(err, io.EOF) {
 						continue
 					} else {
-						s.logger.Printf("[kafka] FetchMessage error: %s", err.Error())
 						continue
 					}
 				}
@@ -141,7 +135,6 @@ func (s *kafkaSubscriber) subscribe(ctx context.Context, topic string, handler b
 				}
 
 				if err = sub.handler.HandleMessage(ctx, m); err != nil {
-					s.logger.Printf("[kafka] HandleMessage error: %s", err.Error())
 					s.finishConsumerSpan(span, err)
 					continue
 				}
@@ -149,7 +142,6 @@ func (s *kafkaSubscriber) subscribe(ctx context.Context, topic string, handler b
 				if autoAck {
 					err = sub.reader.CommitMessages(ctx, msg)
 					if err != nil {
-						s.logger.Printf("[kafka] CommitMessages error: %s", err.Error())
 						s.finishConsumerSpan(span, err)
 						continue
 					}
