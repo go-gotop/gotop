@@ -1,8 +1,9 @@
 package kafka
 
 import (
+	"log"
+
 	"github.com/go-gotop/gotop/broker"
-	"github.com/go-kratos/kratos/v2/log"
 )
 
 type kafkaBroker struct {
@@ -10,7 +11,7 @@ type kafkaBroker struct {
 	subscriber broker.Subscriber
 }
 
-func NewBroker(logger *log.Helper, options ...broker.Option) (broker.Broker, error) {
+func NewBroker(logger *log.Logger, options ...broker.Option) (broker.Broker, error) {
 
 	kp, err := NewPublisher(logger, options...)
 	if err != nil {

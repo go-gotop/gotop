@@ -4,13 +4,14 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
+	"log"
+	"os"
 	"strconv"
 	"sync"
 	"time"
 
 	"github.com/go-gotop/gotop/broker"
 	"github.com/go-gotop/gotop/tracing"
-	"github.com/go-kratos/kratos/v2/log"
 	kafkaGo "github.com/segmentio/kafka-go"
 	"github.com/segmentio/kafka-go/sasl"
 	"go.opentelemetry.io/otel/attribute"
@@ -32,10 +33,14 @@ type kafkaPublisher struct {
 	writerConfig   WriterConfig
 	producerTracer *tracing.Tracer
 
-	logger *log.Helper
+	logger *log.Logger
 }
 
-func NewPublisher(logger *log.Helper, opts ...broker.Option) (broker.Publisher, error) {
+func NewPublisher(logger *log.Logger, opts ...broker.Option) (broker.Publisher, error) {
+	if logger == nil {
+		logger = log.New(os.Stderr, "", log.LstdFlags)
+	}
+
 	po := broker.NewOptions(opts...)
 
 	kp := &kafkaPublisher{
@@ -123,7 +128,7 @@ func (p *kafkaPublisher) Publish(ctx context.Context, message *broker.Message, o
 	// 写入消息
 	err = writer.WriteMessages(ctx, msg)
 	if err != nil {
-		p.logger.Errorf("WriteMessages error: %s", err.Error())
+		p.logger.Printf("WriteMessages error: %s", err.Error())
 		err = p.handleWriterError(ctx, err, cached, msg, writer)
 	}
 	return err

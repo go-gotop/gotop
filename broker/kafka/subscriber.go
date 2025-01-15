@@ -5,13 +5,13 @@ import (
 	"crypto/tls"
 	"errors"
 	"io"
+	"log"
 	"strconv"
 	"sync"
 	"time"
 
 	"github.com/go-gotop/gotop/broker"
 	"github.com/go-gotop/gotop/tracing"
-	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/uuid"
 	kafkaGo "github.com/segmentio/kafka-go"
 	"github.com/segmentio/kafka-go/sasl"
@@ -42,10 +42,10 @@ type kafkaSubscriber struct {
 	tlsConfig      *tls.Config
 	options        *broker.Options
 	stopCh         chan struct{}
-	logger         *log.Helper
+	logger         *log.Logger
 }
 
-func NewSubscriber(logger *log.Helper, opts ...broker.Option) (broker.Subscriber, error) {
+func NewSubscriber(logger *log.Logger, opts ...broker.Option) (broker.Subscriber, error) {
 	po := broker.NewOptions(opts...)
 
 	ks := &kafkaSubscriber{
@@ -127,7 +127,7 @@ func (s *kafkaSubscriber) subscribe(ctx context.Context, topic string, handler b
 					if errors.Is(err, io.EOF) {
 						continue
 					} else {
-						s.logger.Errorf("[kafka] FetchMessage error: %s", err.Error())
+						s.logger.Printf("[kafka] FetchMessage error: %s", err.Error())
 						continue
 					}
 				}
@@ -141,7 +141,7 @@ func (s *kafkaSubscriber) subscribe(ctx context.Context, topic string, handler b
 				}
 
 				if err = sub.handler.HandleMessage(ctx, m); err != nil {
-					s.logger.Errorf("[kafka] HandleMessage error: %s", err.Error())
+					s.logger.Printf("[kafka] HandleMessage error: %s", err.Error())
 					s.finishConsumerSpan(span, err)
 					continue
 				}
@@ -149,7 +149,7 @@ func (s *kafkaSubscriber) subscribe(ctx context.Context, topic string, handler b
 				if autoAck {
 					err = sub.reader.CommitMessages(ctx, msg)
 					if err != nil {
-						s.logger.Errorf("[kafka] CommitMessages error: %s", err.Error())
+						s.logger.Printf("[kafka] CommitMessages error: %s", err.Error())
 						s.finishConsumerSpan(span, err)
 						continue
 					}
