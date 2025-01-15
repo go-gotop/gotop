@@ -22,12 +22,10 @@ import (
 type subscriber struct {
 	sync.RWMutex
 
-	k       *kafkaBroker
 	topic   string
 	options broker.Options
 	handler broker.MessageHandler
 	reader  *kafkaGo.Reader
-	closed  bool
 }
 
 type kafkaSubscriber struct {
