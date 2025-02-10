@@ -14,8 +14,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/shopspring/decimal"
 	"github.com/go-gotop/gotop/types"
+	"github.com/shopspring/decimal"
 )
 
 // CSVFileRequest 请求参数
@@ -36,11 +36,11 @@ type CSVFileRequest struct {
 
 // CSVFile CSV文件逐笔数据流
 type CSVFile struct {
-	id       string
-	ctx      context.Context
-	cancel   context.CancelFunc
-	request  *CSVFileRequest
-	eventID  uint64  // 新增，用于自增事件ID
+	id      string
+	ctx     context.Context
+	cancel  context.CancelFunc
+	request *CSVFileRequest
+	eventID uint64 // 新增，用于自增事件ID
 }
 
 // NewCSVFile 创建CSV数据流
@@ -95,75 +95,70 @@ func (f *CSVFile) Disconnect() error {
 
 // readCSVFiles 读取CSV文件
 func (f *CSVFile) readCSVFiles(files []string) {
-    eventChan := make(chan types.TradeEvent, 10)
-    errorChan := make(chan error, 1)
-    var wg sync.WaitGroup
+	eventChan := make(chan types.TradeEvent, 10)
+	errorChan := make(chan error, 1)
+	var wg sync.WaitGroup
 
-    // 启动事件处理协程
-    wg.Add(1)
-    go func() {
-        defer wg.Done()
-        for event := range eventChan {
-            select {
-            case <-f.ctx.Done():
-                return
-            default:
-                if f.request.Handler != nil {
-                    f.request.Handler(event)
-                }
-            }
-        }
-    }()
+	// 启动事件处理协程
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for event := range eventChan {
+			if f.request.Handler != nil {
+				f.request.Handler(event)
+			}
+		}
+	}()
 
-    // 启动文件处理协程
-    go func() {
-        defer close(eventChan)
-        defer close(errorChan)
+	// 启动文件处理协程
+	go func() {
+		defer close(eventChan)
+		defer close(errorChan)
 
-        for _, file := range files {
-            select {
-            case <-f.ctx.Done():
-                return
-            default:
-                if err := f.processFile(file, eventChan, f.request.Start, f.request.End); err != nil {
-                    errorChan <- fmt.Errorf("process file %s error: %w", file, err)
-                    return
-                }
-            }
-        }
+		for _, file := range files {
+			select {
+			case <-f.ctx.Done():
+				return
+			default:
+				if err := f.processFile(file, eventChan, f.request.Start, f.request.End); err != nil {
+					errorChan <- fmt.Errorf("process file %s error: %w", file, err)
+					return
+				}
+			}
+		}
 
-        // 正常完成时，不往errorChan写入任何错误，这样errorChan会在结束时被关闭
-    }()
+		// 正常完成时，不往errorChan写入任何错误，这样errorChan会在结束时被关闭
+	}()
 
-    // 等待错误或处理完成
-    var finalErr error
-    select {
-    case finalErr = <-errorChan:
-        // 如果有错误，此处finalErr会非空
-        // 如果errorChan被关闭但未发送错误，则finalErr为nil表示正常完成
-    case <-f.ctx.Done():
-        // 上下文取消
-    }
+	// 等待错误或处理完成
+	var finalErr error
+	select {
+	case finalErr = <-errorChan:
+		// 如果有错误，此处finalErr会非空
+		// 如果errorChan被关闭但未发送错误，则finalErr为nil表示正常完成
+	case <-f.ctx.Done():
+		// 上下文取消
+	}
 
-    // 等待所有事件处理完成
-    wg.Wait()
+	// 等待所有事件处理完成
+	wg.Wait()
 
-    // 根据结果进行相应的处理
-    if f.ctx.Err() != nil {
-        // 上下文已取消，不调用CloseHandler，也不额外处理
-        return
-    }
+	// 根据结果进行相应的处理
+	if f.ctx.Err() != nil {
+		// 上下文已取消，不调用CloseHandler，也不额外处理
+		return
+	}
 
-    if finalErr != nil {
-        // 有错误
-        if f.request.ErrorHandler != nil {
-            f.request.ErrorHandler(finalErr)
-        }
-    } else {
-        // 无错误且上下文未取消，正常完成
-        if f.request.CloseHandler != nil {
-            f.request.CloseHandler()
-        }
+	if finalErr != nil {
+		// 有错误
+		if f.request.ErrorHandler != nil {
+			f.request.ErrorHandler(finalErr)
+		}
+	} else {
+		// 无错误且上下文未取消，正常完成
+		if f.request.CloseHandler != nil {
+			f.request.CloseHandler()
+		}
 	}
 }
 
