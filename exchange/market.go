@@ -2,6 +2,9 @@ package exchange
 
 import (
 	"context"
+
+	"github.com/go-gotop/gotop/types"
+	"github.com/shopspring/decimal"
 )
 
 // MarketDataProvider 提供市场行情数据相关的接口方法
@@ -26,16 +29,36 @@ type MarketDataProvider interface {
 	GetMarkPriceKline(ctx context.Context, req *GetMarkPriceKlineRequest) (*GetMarkPriceKlineResponse, error)
 }
 
+// GetDepthRequest 获取深度请求参数
 type GetDepthRequest struct {
-
+	// Symbol 交易对
+	Symbol string
+	// Level 深度级别
+	Level int
+	// Type 市场类型
+	Type types.MarketType
 }
 
+// GetDepthResponse 获取深度响应
 type GetDepthResponse struct {
-
+	// Depth 深度
+	Depth Depth
 }
 
+// Depth 市场深度
 type Depth struct {
+	// Asks 卖盘
+	Asks []DepthItem
+	// Bids 买盘
+	Bids []DepthItem
+}
 
+// DepthItem 市场深度项
+type DepthItem struct {
+	// Price 价格
+	Price decimal.Decimal
+	// Amount 数量
+	Amount decimal.Decimal
 }
 
 type GetMarkPriceKlineRequest struct {

@@ -17,7 +17,7 @@ type AuthInfo struct {
 type Request struct {
 	Method string
 	URL    string
-	Params map[string]interface{}
+	Params map[string]any
 	Auth   *AuthInfo
 }
 
