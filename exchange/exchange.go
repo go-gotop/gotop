@@ -1,5 +1,10 @@
 package exchange
 
+const (
+	ExchangeBinance = "BINANCE"
+	ExchangeOKX     = "OKX"
+)
+
 // Exchange 交易所接口，整合了订单管理、市场数据和账户管理功能。
 // 在实现时，若某些交易所不支持部分方法，可在运行时做特性检测或返回未实现的错误。
 type Exchange interface {
