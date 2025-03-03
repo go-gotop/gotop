@@ -13,11 +13,10 @@ type Message struct {
 	Metadata map[string]interface{} // 用于存放特定实现的额外信息，如偏移量、分区信息等
 }
 
-// MessageHandler 用于上层业务处理消息的回调接口。
+// Handler 用于上层业务处理消息的回调方法。
 // 不同的底层实现可以在调用此方法前后进行Offset提交、Ack确认等动作，但上层并不需要感知。
-type MessageHandler interface {
-	HandleMessage(ctx context.Context, msg *Message) error
-}
+type Handler func (ctx context.Context, msg *Message) error
+
 
 // Publisher 定义通用的消息发布者接口。
 // 不关心底层是Kafka Topic、Redis Channel、RabbitMQ Exchange，统一为Publish操作。
@@ -36,7 +35,7 @@ type Publisher interface {
 type Subscriber interface {
 	// Subscribe接收一个或多个主题，并将收到的消息交给handler处理。
 	// 订阅可以是阻塞式，也可以异步在内部协程中进行消息消费。
-	Subscribe(ctx context.Context, topics []string, handler MessageHandler, opts ...Option) error
+	Subscribe(ctx context.Context, topics []string, handler Handler, opts ...Option) error
 
 	// Close用于释放订阅者相关资源，断开与底层系统的连接。
 	Close() error

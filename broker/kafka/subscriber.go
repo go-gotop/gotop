@@ -24,7 +24,7 @@ type subscriber struct {
 
 	topic   string
 	options broker.Options
-	handler broker.MessageHandler
+	handler broker.Handler
 	reader  *kafkaGo.Reader
 }
 
@@ -72,7 +72,7 @@ func NewSubscriber(opts ...broker.Option) (broker.Subscriber, error) {
 	return ks, nil
 }
 
-func (s *kafkaSubscriber) Subscribe(ctx context.Context, topics []string, handler broker.MessageHandler, opts ...broker.Option) error {
+func (s *kafkaSubscriber) Subscribe(ctx context.Context, topics []string, handler broker.Handler, opts ...broker.Option) error {
 	po := broker.NewOptions(opts...)
 
 	for _, topic := range topics {
@@ -83,7 +83,7 @@ func (s *kafkaSubscriber) Subscribe(ctx context.Context, topics []string, handle
 	return nil
 }
 
-func (s *kafkaSubscriber) subscribe(ctx context.Context, topic string, handler broker.MessageHandler, po broker.Options) error {
+func (s *kafkaSubscriber) subscribe(ctx context.Context, topic string, handler broker.Handler, po broker.Options) error {
 	autoAck := true
 	queue := uuid.New().String()
 
@@ -132,7 +132,7 @@ func (s *kafkaSubscriber) subscribe(ctx context.Context, topic string, handler b
 					Value: msg.Value,
 				}
 
-				if err = sub.handler.HandleMessage(ctx, m); err != nil {
+				if err = sub.handler(ctx, m); err != nil {
 					s.finishConsumerSpan(span, err)
 					continue
 				}
