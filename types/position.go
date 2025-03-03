@@ -1,5 +1,75 @@
 package types
 
+// ExecutionType 订单执行类型: 1-ExecutionTypeNew, 2-ExecutionTypeTrade, 3-ExecutionTypeCanceled, 4-ExecutionTypeRejected, 5-ExecutionTypeExpired
+type ExecutionType int
+
+// String 返回字符串表示
+func (e ExecutionType) String() string {
+	switch e {
+	case ExecutionTypeNew:
+		return "NEW"
+	case ExecutionTypeTrade:
+		return "TRADE"
+	case ExecutionTypeCanceled:
+		return "CANCELED"
+	case ExecutionTypeRejected:
+		return "REJECTED"
+	case ExecutionTypeExpired:
+		return "EXPIRED"
+	}
+	return "UNKNOWN"
+}
+
+const (
+	// ExecutionTypeUnknown 未知
+	ExecutionTypeUnknown ExecutionType = iota
+	// ExecutionTypeNew 新订单
+	ExecutionTypeNew
+	// ExecutionTypeTrade 成交
+	ExecutionTypeTrade
+	// ExecutionTypeCanceled 已取消
+	ExecutionTypeCanceled
+	// ExecutionTypeRejected 已拒绝
+	ExecutionTypeRejected
+	// ExecutionTypeExpired 已过期
+	ExecutionTypeExpired
+)
+
+// OrderState 订单状态: 1-OrderStateNew, 2-OrderStatePartiallyFilled, 3-OrderStateFilled, 4-OrderStateCanceled, 5-OrderStateRejected
+type OrderState int
+
+// String 返回字符串表示
+func (o OrderState) String() string {
+	switch o {
+	case OrderStateNew:
+		return "NEW"
+	case OrderStatePartiallyFilled:
+		return "PARTIALLY_FILLED"
+	case OrderStateFilled:
+		return "FILLED"
+	case OrderStateCanceled:
+		return "CANCELED"
+	case OrderStateRejected:
+		return "REJECTED"
+	}
+	return "UNKNOWN"
+}
+
+const (
+	// OrderStateUnknown 未知
+	OrderStateUnknown OrderState = iota
+	// OrderStateNew 新订单
+	OrderStateNew
+	// OrderStatePartiallyFilled 部分成交
+	OrderStatePartiallyFilled
+	// OrderStateFilled 全部成交
+	OrderStateFilled
+	// OrderStateCanceled 已取消
+	OrderStateCanceled
+	// OrderStateRejected 已拒绝
+	OrderStateRejected
+)
+
 // OrderType 订单类型: 1-OrderTypeMarket, 2-OrderTypeLimit
 type OrderType int
 
