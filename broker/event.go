@@ -1,12 +1,12 @@
 package broker
 
 import (
-	"github.com/shopspring/decimal"
 	"github.com/go-gotop/gotop/types"
+	"github.com/shopspring/decimal"
 )
 
 // StrategySignalEvent 策略信号事件
-type StrategySignalEvent struct{
+type StrategySignalEvent struct {
 	// PositionID 仓位ID
 	PositionID string
 	// ID 交易ID
@@ -98,7 +98,7 @@ type OrderResultEvent struct {
 }
 
 // FrameErrorEvent 帧错误事件
-type FrameErrorEvent struct{
+type FrameErrorEvent struct {
 	// Error 错误信息
 	Error string
 	// PositionID 仓位ID
@@ -114,21 +114,21 @@ type FrameErrorEvent struct{
 }
 
 // TradeEvent 交易事件
-type TradeEvent struct{
+type TradeEvent struct {
 	// Timestamp 当前时间戳
-	Timestamp   int64
+	Timestamp int64
 	// TradeID 交易ID
-	TradeID    string
+	TradeID string
 	// Symbol 交易对
-	Symbol     string
+	Symbol string
 	// Exchange 交易所
-	Exchange   string
-	// Size 交易数量
-	Size       decimal.Decimal
+	Exchange string
+	// Volume 交易数量
+	Volume decimal.Decimal
 	// Price 交易价格
-	Price      decimal.Decimal
+	Price decimal.Decimal
 	// Side 交易方向
-	Side       types.SideType
+	Side types.SideType
 	// MarketType 市场类型
 	MarketType types.MarketType
 }
