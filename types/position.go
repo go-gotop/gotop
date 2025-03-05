@@ -1,5 +1,10 @@
 package types
 
+import (
+	"fmt"
+	"strings"
+)
+
 // ExecutionType 订单执行类型: 1-ExecutionTypeNew, 2-ExecutionTypeTrade, 3-ExecutionTypeCanceled, 4-ExecutionTypeRejected, 5-ExecutionTypeExpired
 type ExecutionType int
 
@@ -18,6 +23,39 @@ func (e ExecutionType) String() string {
 		return "EXPIRED"
 	}
 	return "UNKNOWN"
+}
+
+// IsValid 判断 ExecutionType 是否为已定义的类型
+func (e ExecutionType) IsValid() bool {
+	switch e {
+	case ExecutionTypeNew,
+		ExecutionTypeTrade,
+		ExecutionTypeCanceled,
+		ExecutionTypeRejected,
+		ExecutionTypeExpired:
+		return true
+	default:
+		return false
+	}
+}
+
+// ParseExecutionType 从字符串解析 ExecutionType (不区分大小写)
+func ParseExecutionType(s string) (ExecutionType, error) {
+	s = strings.ToUpper(strings.TrimSpace(s))
+	switch s {
+	case "NEW":
+		return ExecutionTypeNew, nil
+	case "TRADE":
+		return ExecutionTypeTrade, nil
+	case "CANCELED":
+		return ExecutionTypeCanceled, nil
+	case "REJECTED":
+		return ExecutionTypeRejected, nil
+	case "EXPIRED":
+		return ExecutionTypeExpired, nil
+	default:
+		return 0, fmt.Errorf("unknown execution type: %s", s)
+	}
 }
 
 const (
@@ -55,6 +93,39 @@ func (o OrderState) String() string {
 	return "UNKNOWN"
 }
 
+// IsValid 判断 OrderState 是否为已定义的类型
+func (o OrderState) IsValid() bool {
+	switch o {
+	case OrderStateNew,
+		OrderStatePartiallyFilled,
+		OrderStateFilled,
+		OrderStateCanceled,
+		OrderStateRejected:
+		return true
+	default:
+		return false
+	}
+}
+
+// ParseOrderState 从字符串解析 OrderState (不区分大小写)
+func ParseOrderState(s string) (OrderState, error) {
+	s = strings.ToUpper(strings.TrimSpace(s))
+	switch s {
+	case "NEW":
+		return OrderStateNew, nil
+	case "PARTIALLY_FILLED":
+		return OrderStatePartiallyFilled, nil
+	case "FILLED":
+		return OrderStateFilled, nil
+	case "CANCELED":
+		return OrderStateCanceled, nil
+	case "REJECTED":
+		return OrderStateRejected, nil
+	default:
+		return 0, fmt.Errorf("unknown order state: %s", s)
+	}
+}
+
 const (
 	// OrderStateUnknown 未知
 	OrderStateUnknown OrderState = iota
@@ -82,6 +153,30 @@ func (o OrderType) String() string {
 		return "LIMIT"
 	}
 	return "UNKNOWN"
+}
+
+// IsValid 判断 OrderType 是否为已定义的类型
+func (o OrderType) IsValid() bool {
+	switch o {
+	case OrderTypeMarket,
+		OrderTypeLimit:
+		return true
+	default:
+		return false
+	}
+}
+
+// ParseOrderType 从字符串解析 OrderType (不区分大小写)
+func ParseOrderType(s string) (OrderType, error) {
+	s = strings.ToUpper(strings.TrimSpace(s))
+	switch s {
+	case "MARKET":
+		return OrderTypeMarket, nil
+	case "LIMIT":
+		return OrderTypeLimit, nil
+	default:
+		return 0, fmt.Errorf("unknown order type: %s", s)
+	}
 }
 
 const (
@@ -115,6 +210,39 @@ func (p PositionStatus) String() string {
 	return "UNKNOWN"
 }
 
+// IsValid 判断 PositionStatus 是否为已定义的类型
+func (p PositionStatus) IsValid() bool {
+	switch p {
+	case NewPosition,
+		OpeningPosition,
+		HoldingPosition,
+		ClosingPosition,
+		ClosedPosition:
+		return true
+	default:
+		return false
+	}
+}
+
+// ParsePositionStatus 从字符串解析 PositionStatus (不区分大小写)
+func ParsePositionStatus(s string) (PositionStatus, error) {
+	s = strings.ToUpper(strings.TrimSpace(s))
+	switch s {
+	case "NEW":
+		return NewPosition, nil
+	case "OPENING":
+		return OpeningPosition, nil
+	case "HOLDING":
+		return HoldingPosition, nil
+	case "CLOSING":
+		return ClosingPosition, nil
+	case "CLOSED":
+		return ClosedPosition, nil
+	default:
+		return 0, fmt.Errorf("unknown position status: %s", s)
+	}
+}
+
 const (
 	// PositionStatusUnknown 未知
 	PositionStatusUnknown PositionStatus = iota
@@ -144,6 +272,30 @@ func (s SideType) String() string {
 	return "UNKNOWN"
 }
 
+// IsValid 判断 SideType 是否为已定义的类型
+func (s SideType) IsValid() bool {
+	switch s {
+	case SideTypeBuy,
+		SideTypeSell:
+		return true
+	default:
+		return false
+	}
+}
+
+// ParseSideType 从字符串解析 SideType (不区分大小写)
+func ParseSideType(s string) (SideType, error) {
+	s = strings.ToUpper(strings.TrimSpace(s))
+	switch s {
+	case "BUY":
+		return SideTypeBuy, nil
+	case "SELL":
+		return SideTypeSell, nil
+	default:
+		return 0, fmt.Errorf("unknown side type: %s", s)
+	}
+}
+
 const (
 	// SideTypeUnknown 未知
 	SideTypeUnknown SideType = iota
@@ -165,6 +317,30 @@ func (p PositionSide) String() string {
 		return "SHORT"
 	}
 	return "UNKNOWN"
+}
+
+// IsValid 判断 PositionSide 是否为已定义的类型
+func (p PositionSide) IsValid() bool {
+	switch p {
+	case PositionSideLong,
+		PositionSideShort:
+		return true
+	default:
+		return false
+	}
+}
+
+// ParsePositionSide 从字符串解析 PositionSide (不区分大小写)
+func ParsePositionSide(s string) (PositionSide, error) {
+	s = strings.ToUpper(strings.TrimSpace(s))
+	switch s {
+	case "LONG":
+		return PositionSideLong, nil
+	case "SHORT":
+		return PositionSideShort, nil
+	default:
+		return 0, fmt.Errorf("unknown position side: %s", s)
+	}
 }
 
 const (
@@ -192,6 +368,33 @@ func (t TimeInForce) String() string {
 	return "UNKNOWN"
 }
 
+// IsValid 判断 TimeInForce 是否为已定义的类型
+func (t TimeInForce) IsValid() bool {
+	switch t {
+	case TimeInForceGTC,
+		TimeInForceIOC,
+		TimeInForceFOK:
+		return true
+	default:
+		return false
+	}
+}
+
+// ParseTimeInForce 从字符串解析 TimeInForce (不区分大小写)
+func ParseTimeInForce(s string) (TimeInForce, error) {
+	s = strings.ToUpper(strings.TrimSpace(s))
+	switch s {
+	case "GTC":
+		return TimeInForceGTC, nil
+	case "IOC":
+		return TimeInForceIOC, nil
+	case "FOK":
+		return TimeInForceFOK, nil
+	default:
+		return 0, fmt.Errorf("unknown time in force: %s", s)
+	}
+}
+
 const (
 	// TimeInForceUnknown 未知
 	TimeInForceUnknown TimeInForce = iota
@@ -203,7 +406,7 @@ const (
 	TimeInForceFOK
 )
 
-// OrderStatus 订单状态: 
+// OrderStatus 订单状态:
 // 1-OrderStatusNew, 2-OrderStatusPartiallyFilled, 3-OrderStatusFilled,
 // 4-OrderStatusCanceled, 5-OrderStatusPendingCancel, 6-OrderStatusRejected
 type OrderStatus int
@@ -219,8 +422,48 @@ func (o OrderStatus) String() string {
 		return "FILLED"
 	case OrderStatusCanceled:
 		return "CANCELED"
+	case OrderStatusPendingCancel:
+		return "PENDING_CANCEL"
+	case OrderStatusRejected:
+		return "REJECTED"
 	}
 	return "UNKNOWN"
+}
+
+// IsValid 判断 OrderStatus 是否为已定义的类型
+func (o OrderStatus) IsValid() bool {
+	switch o {
+	case OrderStatusNew,
+		OrderStatusPartiallyFilled,
+		OrderStatusFilled,
+		OrderStatusCanceled,
+		OrderStatusPendingCancel,
+		OrderStatusRejected:
+		return true
+	default:
+		return false
+	}
+}
+
+// ParseOrderStatus 从字符串解析 OrderStatus (不区分大小写)
+func ParseOrderStatus(s string) (OrderStatus, error) {
+	s = strings.ToUpper(strings.TrimSpace(s))
+	switch s {
+	case "NEW":
+		return OrderStatusNew, nil
+	case "PARTIALLY_FILLED":
+		return OrderStatusPartiallyFilled, nil
+	case "FILLED":
+		return OrderStatusFilled, nil
+	case "CANCELED":
+		return OrderStatusCanceled, nil
+	case "PENDING_CANCEL":
+		return OrderStatusPendingCancel, nil
+	case "REJECTED":
+		return OrderStatusRejected, nil
+	default:
+		return 0, fmt.Errorf("unknown order status: %s", s)
+	}
 }
 
 const (

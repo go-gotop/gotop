@@ -1,6 +1,11 @@
 package types
 
-import "github.com/shopspring/decimal"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/shopspring/decimal"
+)
 
 // StrategyStatus 策略状态:
 // 1-StrategyStatusRunning, 2-StrategyStatusSuspended
@@ -23,6 +28,39 @@ func (s StrategyStatus) String() string {
 		return "ERROR"
 	}
 	return "UNKNOWN"
+}
+
+// IsValid 判断 StrategyStatus 是否为已定义的类型
+func (s StrategyStatus) IsValid() bool {
+	switch s {
+	case StrategyStatusRunning,
+		StrategyStatusSuspended,
+		StrategyStatusStopped,
+		StrategyStatusFinished,
+		StrategyStatusError:
+		return true
+	default:
+		return false
+	}
+}
+
+// ParseStrategyStatus 从字符串解析 StrategyStatus (不区分大小写)
+func ParseStrategyStatus(s string) (StrategyStatus, error) {
+	s = strings.ToUpper(strings.TrimSpace(s))
+	switch s {
+	case "RUNNING":
+		return StrategyStatusRunning, nil
+	case "SUSPENDED":
+		return StrategyStatusSuspended, nil
+	case "STOPPED":
+		return StrategyStatusStopped, nil
+	case "FINISHED":
+		return StrategyStatusFinished, nil
+	case "ERROR":
+		return StrategyStatusError, nil
+	default:
+		return 0, fmt.Errorf("unknown strategy status: %s", s)
+	}
 }
 
 const (
@@ -131,7 +169,7 @@ func (r *RangeExtremum) IsSideways() bool {
 }
 
 // PriceRange 价格区间
-func(r *RangeExtremum) PriceRange() (PricePoint, PricePoint) {
+func (r *RangeExtremum) PriceRange() (PricePoint, PricePoint) {
 	if r.IsTrending() {
 		return r.ValleyPrice, r.PeakPrice
 	}
@@ -176,7 +214,7 @@ func (t *TradeAggregate) IsSideways() bool {
 }
 
 // PriceRange 价格区间
-func(t *TradeAggregate) PriceRange() (PricePoint, PricePoint) {
+func (t *TradeAggregate) PriceRange() (PricePoint, PricePoint) {
 	if t.IsTrending() {
 		return t.ValleyPrice, t.PeakPrice
 	}
