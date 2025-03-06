@@ -54,7 +54,7 @@ func ParseExecutionType(s string) (ExecutionType, error) {
 	case "EXPIRED":
 		return ExecutionTypeExpired, nil
 	default:
-		return 0, fmt.Errorf("unknown execution type: %s", s)
+		return ExecutionTypeUnknown, fmt.Errorf("unknown execution type: %s", s)
 	}
 }
 

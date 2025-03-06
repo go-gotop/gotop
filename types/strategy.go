@@ -115,6 +115,19 @@ func (p PositioningLevel) String() string {
 	return "UNKNOWN"
 }
 
+// ParsePositioningLevel 从字符串解析 PositioningLevel (不区分大小写)
+func ParsePositioningLevel(s string) (PositioningLevel, error) {
+	s = strings.ToUpper(strings.TrimSpace(s))
+	switch s {
+	case "SUPPORT":
+		return PositioningLevelSupport, nil
+	case "RESISTANCE":
+		return PositioningLevelResistance, nil
+	default:
+		return PositioningLevelUnknown, fmt.Errorf("unknown positioning level: %s", s)
+	}
+}
+
 const (
 	// PositioningLevelUnknown 未知
 	PositioningLevelUnknown PositioningLevel = iota
