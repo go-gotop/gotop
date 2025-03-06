@@ -17,6 +17,8 @@ type StrategySignalEvent struct {
 	Timestamp int64
 	// ClientOrderID 自定义客户端订单号
 	ClientOrderID string
+	// Exchange 交易所
+	Exchange string
 	// TimeInForce GTC，IOC，FOK，GTX，GTD
 	TimeInForce types.TimeInForce
 	// SideType BUY，SELL
