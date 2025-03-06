@@ -59,7 +59,7 @@ func ParseStrategyStatus(s string) (StrategyStatus, error) {
 	case "ERROR":
 		return StrategyStatusError, nil
 	default:
-		return 0, fmt.Errorf("unknown strategy status: %s", s)
+		return StrategyStatusUnknown, fmt.Errorf("unknown strategy status: %s", s)
 	}
 }
 

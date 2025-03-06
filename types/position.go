@@ -122,7 +122,7 @@ func ParseOrderState(s string) (OrderState, error) {
 	case "REJECTED":
 		return OrderStateRejected, nil
 	default:
-		return 0, fmt.Errorf("unknown order state: %s", s)
+		return OrderStateUnknown, fmt.Errorf("unknown order state: %s", s)
 	}
 }
 
@@ -175,7 +175,7 @@ func ParseOrderType(s string) (OrderType, error) {
 	case "LIMIT":
 		return OrderTypeLimit, nil
 	default:
-		return 0, fmt.Errorf("unknown order type: %s", s)
+		return OrderTypeUnknown, fmt.Errorf("unknown order type: %s", s)
 	}
 }
 
@@ -239,7 +239,7 @@ func ParsePositionStatus(s string) (PositionStatus, error) {
 	case "CLOSED":
 		return ClosedPosition, nil
 	default:
-		return 0, fmt.Errorf("unknown position status: %s", s)
+		return PositionStatusUnknown, fmt.Errorf("unknown position status: %s", s)
 	}
 }
 
@@ -292,7 +292,7 @@ func ParseSideType(s string) (SideType, error) {
 	case "SELL":
 		return SideTypeSell, nil
 	default:
-		return 0, fmt.Errorf("unknown side type: %s", s)
+		return SideTypeUnknown, fmt.Errorf("unknown side type: %s", s)
 	}
 }
 
@@ -339,7 +339,7 @@ func ParsePositionSide(s string) (PositionSide, error) {
 	case "SHORT":
 		return PositionSideShort, nil
 	default:
-		return 0, fmt.Errorf("unknown position side: %s", s)
+		return PositionSideUnknown, fmt.Errorf("unknown position side: %s", s)
 	}
 }
 
@@ -391,7 +391,7 @@ func ParseTimeInForce(s string) (TimeInForce, error) {
 	case "FOK":
 		return TimeInForceFOK, nil
 	default:
-		return 0, fmt.Errorf("unknown time in force: %s", s)
+		return TimeInForceUnknown, fmt.Errorf("unknown time in force: %s", s)
 	}
 }
 
@@ -462,7 +462,7 @@ func ParseOrderStatus(s string) (OrderStatus, error) {
 	case "REJECTED":
 		return OrderStatusRejected, nil
 	default:
-		return 0, fmt.Errorf("unknown order status: %s", s)
+		return OrderStatusUnknown, fmt.Errorf("unknown order status: %s", s)
 	}
 }
 
