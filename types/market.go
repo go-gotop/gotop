@@ -46,16 +46,29 @@ const (
 type MarketType int
 
 const (
-	MarketTypeSpot MarketType = iota + 1
+	// MarketTypeUnknown 未知
+	MarketTypeUnknown MarketType = iota
+	// MarketTypeSpot 现货市场
+	MarketTypeSpot
+	// MarketTypeMargin 杠杆/保证金市场
 	MarketTypeMargin
-	MarketTypeFuturesUSDMargined    // U本位期货
-	MarketTypeFuturesCoinMargined   // 币本位期货
-	MarketTypePerpetualUSDMargined  // U本位永续
-	MarketTypePerpetualCoinMargined // 币本位永续
+	// MarketTypeFuturesUSDMargined U本位期货
+	MarketTypeFuturesUSDMargined
+	// MarketTypeFuturesCoinMargined 币本位期货
+	MarketTypeFuturesCoinMargined
+	// MarketTypePerpetualUSDMargined U本位永续
+	MarketTypePerpetualUSDMargined
+	// MarketTypePerpetualCoinMargined 币本位永续
+	MarketTypePerpetualCoinMargined
+	// MarketTypeOptions 期权
 	MarketTypeOptions
+	// MarketTypeLeveragedTokens 杠杆代币
 	MarketTypeLeveragedTokens
+	// MarketTypeP2P 点对点市场
 	MarketTypeP2P
+	// MarketTypeETF ETF类产品市场
 	MarketTypeETF
+	// MarketTypeNFT NFT数字藏品市场
 	MarketTypeNFT
 )
 
@@ -85,7 +98,7 @@ func (m MarketType) String() string {
 	case MarketTypeNFT:
 		return "NFT"
 	default:
-		return ""
+		return "UNKNOWN"
 	}
 }
 
@@ -136,7 +149,7 @@ func ParseMarketType(s string) (MarketType, error) {
 	case "NFT":
 		return MarketTypeNFT, nil
 	default:
-		return 0, fmt.Errorf("unknown market type: %s", s)
+		return MarketTypeUnknown, fmt.Errorf("unknown market type: %s", s)
 	}
 }
 

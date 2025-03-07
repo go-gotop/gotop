@@ -39,7 +39,7 @@ func ParseAccountType(s string) (AccountType, error) {
 	case "UNIFIED":
 		return AccountTypeUnified, nil
 	default:
-		return 0, fmt.Errorf("unknown account type: %s", s)
+		return AccountTypeUnknown, fmt.Errorf("unknown account type: %s", s)
 	}
 }
 
