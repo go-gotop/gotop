@@ -3,6 +3,7 @@ module github.com/go-gotop/gotop
 go 1.24.0
 
 require (
+	github.com/bitly/go-simplejson v0.5.1
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/segmentio/kafka-go v0.4.47
