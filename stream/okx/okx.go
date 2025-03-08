@@ -98,11 +98,6 @@ func (b *OkxStream) Connect(ctx context.Context, cfg OkxRequest) error {
 	if err := b.connect(); err != nil {
 		return err
 	}
-
-	if b.cfg.ConnectedHandler != nil {
-		b.cfg.ConnectedHandler(b.conn)
-	}
-
 	// 启动后台goroutine
 	b.startGoroutines()
 
@@ -157,8 +152,12 @@ func (b *OkxStream) connect() error {
 	b.conn = c
 	// 设置读取超时时间为pongWait
 	b.conn.SetReadDeadline(time.Now().Add(b.pongWait))
-	// OKX 使用文本消息 "pong" 而不是标准的 pong 帧，所以这里不需要设置 PongHandler
-	// 在 readLoop 中处理文本类型的 pong 消息
+
+	// 调用连接成功处理函数
+	if b.cfg.ConnectedHandler != nil {
+		b.cfg.ConnectedHandler(b.conn)
+	}
+
 	return nil
 }
 
@@ -225,7 +224,7 @@ func (b *OkxStream) readLoop() {
 				continue
 			}
 
-			if event == "" {
+			if event != "" {
 				continue
 			}
 
