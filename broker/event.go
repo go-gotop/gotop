@@ -135,6 +135,20 @@ type TradeEvent struct {
 	MarketType types.MarketType
 }
 
+// MarkPriceEvent 标记价格事件
+type MarkPriceEvent struct {
+	// Timestamp 更新时间
+	Timestamp int64
+	// Symbol 交易对
+	Symbol string
+	// Exchange 交易所
+	Exchange string
+	// Price 标记价格
+	Price decimal.Decimal
+	// MarketType 市场类型
+	MarketType types.MarketType
+}
+
 // KlineEvent K线事件
 type KlineEvent struct {
 	// Symbol 交易对
