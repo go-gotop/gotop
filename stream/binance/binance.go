@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/go-gotop/gotop/stream"
+	"github.com/go-gotop/gotop/types"
 )
 
 // BinanceRequest Binance Stream的配置参数
@@ -30,7 +30,7 @@ type dialFunc func(urlStr string, requestHeader http.Header) (*websocket.Conn, *
 type BinanceStream struct {
 	mu     sync.Mutex
 	id     string
-	st stream.StreamType
+	st     types.StreamType
 	cfg    BinanceRequest
 	conn   *websocket.Conn
 	ctx    context.Context
@@ -62,7 +62,7 @@ type BinanceStream struct {
 }
 
 // NewBinanceStream 创建一个新的BinanceStream
-func NewBinanceStream(id string, st stream.StreamType, opts ...Option) *BinanceStream {
+func NewBinanceStream(id string, st types.StreamType, opts ...Option) *BinanceStream {
 	b := &BinanceStream{
 		id:     id,
 		st:     st,
@@ -108,7 +108,7 @@ func (b *BinanceStream) ID() string {
 }
 
 // Type 返回当前连接的类型
-func (b *BinanceStream) Type() stream.StreamType {
+func (b *BinanceStream) Type() types.StreamType {
 	return b.st
 }
 

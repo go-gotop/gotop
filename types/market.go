@@ -30,10 +30,10 @@ const (
 	BySystem = "SYSTEM"
 )
 
-// MarketType 市场类型  
-// 可扩展为：  
-// 1. SPOT: 现货市场  
-// 2. MARGIN: 杠杆/保证金市场  
+// MarketType 市场类型
+// 可扩展为：
+// 1. SPOT: 现货市场
+// 2. MARGIN: 杠杆/保证金市场
 // 3. FUTURES_USD_MARGINED: U本位期货（如 Binance USDT-M合约）
 // 4. FUTURES_COIN_MARGINED: 币本位期货（如 Binance COIN-M合约）
 // 5. PERPETUAL_USD_MARGINED: U本位永续合约
@@ -153,6 +153,83 @@ func ParseMarketType(s string) (MarketType, error) {
 	}
 }
 
+// StreamType 用于区分不同的订阅数据流类型，例如 trade、order、balance、ticker、kline、depth 等。
+// 每个 StreamType 表示数据流中传递的主要信息类别。
+type StreamType int
+
+const (
+	// StreamTypeUnknown 未知数据流类型
+	StreamTypeUnknown StreamType = iota
+	// StreamTypeTrade 交易数据流（成交信息）
+	StreamTypeTrade
+	// StreamTypeOrder 订单数据流（用户订单更新）
+	StreamTypeOrder
+	// StreamTypeBalance 余额数据流（用户账户余额变动）
+	StreamTypeBalance
+	// StreamTypeTicker 行情Ticker数据流（最新成交价、24小时涨跌等汇总信息）
+	StreamTypeTicker
+	// StreamTypeKline K线数据流（周期价格数据，比如1m、5m、1h k线）
+	StreamTypeKline
+	// StreamTypeDepth 市场深度数据流（订单簿更新）
+	StreamTypeDepth
+	// StreamTypeBookTicker 最优盘口数据流（最优买一、卖一报价更新）
+	StreamTypeBookTicker
+	// StreamTypeMarkPrice 标记价格数据流（期货、永续合约的标记价格）
+	StreamTypeMarkPrice
+)
+
+// String 返回StreamType的字符串表示
+func (s StreamType) String() string {
+	switch s {
+	case StreamTypeTrade:
+		return "TRADE"
+	case StreamTypeOrder:
+		return "ORDER"
+	case StreamTypeBalance:
+		return "BALANCE"
+	case StreamTypeTicker:
+		return "TICKER"
+	case StreamTypeKline:
+		return "KLINE"
+	case StreamTypeDepth:
+		return "DEPTH"
+	case StreamTypeBookTicker:
+		return "BOOK_TICKER"
+	case StreamTypeMarkPrice:
+		return "MARK_PRICE"
+	default:
+		return "UNKNOWN"
+	}
+}
+
+// IsValid 判断StreamType是否有效
+func (s StreamType) IsValid() bool {
+	return s >= StreamTypeTrade && s <= StreamTypeMarkPrice
+}
+
+// ParseStreamType 从字符串解析 StreamType (不区分大小写)
+func ParseStreamType(s string) (StreamType, error) {
+	switch strings.ToUpper(s) {
+	case "TRADE":
+		return StreamTypeTrade, nil
+	case "ORDER":
+		return StreamTypeOrder, nil
+	case "BALANCE":
+		return StreamTypeBalance, nil
+	case "TICKER":
+		return StreamTypeTicker, nil
+	case "KLINE":
+		return StreamTypeKline, nil
+	case "DEPTH":
+		return StreamTypeDepth, nil
+	case "BOOK_TICKER":
+		return StreamTypeBookTicker, nil
+	case "MARK_PRICE":
+		return StreamTypeMarkPrice, nil
+	default:
+		return StreamTypeUnknown, fmt.Errorf("unknown stream type: %s", s)
+	}
+}
 
 // TradeEvent 成交事件
 type TradeEvent struct {

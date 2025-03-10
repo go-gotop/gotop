@@ -13,7 +13,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/require"
 
-	"github.com/go-gotop/gotop/stream"
+	"github.com/go-gotop/gotop/types"
 )
 
 func TestConnectAndDisconnect(t *testing.T) {
@@ -35,7 +35,7 @@ func TestConnectAndDisconnect(t *testing.T) {
 	// 将测试服务器的URL从 http:// 替换成 ws://
 	wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
 
-	bs := NewBinanceStream("test_id", stream.StreamTypeTrade)
+	bs := NewBinanceStream("test_id", types.StreamTypeTrade)
 	err := bs.Connect(context.Background(), BinanceRequest{
 		URL: wsURL,
 	})
@@ -64,7 +64,7 @@ func TestMessageHandling(t *testing.T) {
 	var receivedMsg []byte
 	var mu sync.Mutex
 
-	bs := NewBinanceStream("msg_test", stream.StreamTypeTrade)
+	bs := NewBinanceStream("msg_test", types.StreamTypeTrade)
 	err := bs.Connect(context.Background(), BinanceRequest{
 		URL: wsURL,
 		Handler: func(data []byte) {
@@ -110,7 +110,7 @@ func TestErrorAndReconnect(t *testing.T) {
 	var loggerBuffer strings.Builder
 	logger := slog.New(slog.NewTextHandler(&loggerBuffer, nil))
 
-	bs := NewBinanceStream("reconnect_test", stream.StreamTypeTrade)
+	bs := NewBinanceStream("reconnect_test", types.StreamTypeTrade)
 	bs.reconnectInterval = 2 * time.Second // 缩短重连间隔以加速测试
 	err := bs.Connect(context.Background(), BinanceRequest{
 		URL: wsURL,
@@ -165,7 +165,7 @@ func TestPingPong(t *testing.T) {
 	wsURL := "ws" + strings.TrimPrefix(server.URL, "http")
 
 	var errCalled bool
-	bs := NewBinanceStream("ping_test", stream.StreamTypeTrade)
+	bs := NewBinanceStream("ping_test", types.StreamTypeTrade)
 	bs.pingInterval = 200 * time.Millisecond // 加快ping频率便于测试
 
 	err := bs.Connect(context.Background(), BinanceRequest{
@@ -208,7 +208,7 @@ func TestTimeBasedReconnect(t *testing.T) {
 	var logBuffer strings.Builder
 	logger := slog.New(slog.NewTextHandler(&logBuffer, nil))
 
-	bs := NewBinanceStream("time_reconnect_test", stream.StreamTypeTrade)
+	bs := NewBinanceStream("time_reconnect_test", types.StreamTypeTrade)
 	bs.reconnectInterval = 100 * time.Millisecond // 缩短为100ms便于测试
 
 	err := bs.Connect(context.Background(), BinanceRequest{

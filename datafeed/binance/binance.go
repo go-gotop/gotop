@@ -90,7 +90,7 @@ func (b *BinanceDataFeed) TradeStream(ctx context.Context, id string, request Bi
 		return fmt.Errorf("invalid market type: %v", request.Market)
 	}
 
-	s := binanceStream.NewBinanceStream(id, stream.StreamTypeTrade)
+	s := binanceStream.NewBinanceStream(id, types.StreamTypeTrade)
 
 	if err := s.Connect(ctx, binanceStream.BinanceRequest{
 		URL: url,
