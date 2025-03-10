@@ -11,7 +11,7 @@ import (
 	"github.com/bitly/go-simplejson"
 	"github.com/gorilla/websocket"
 
-	"github.com/go-gotop/gotop/stream"
+	"github.com/go-gotop/gotop/types"
 )
 
 type OkxRequest struct {
@@ -34,7 +34,7 @@ type dialFunc func(urlStr string, requestHeader http.Header) (*websocket.Conn, *
 type OkxStream struct {
 	mu     sync.Mutex
 	id     string
-	st     stream.StreamType
+	st     types.StreamType
 	cfg    OkxRequest
 	conn   *websocket.Conn
 	ctx    context.Context
@@ -66,7 +66,7 @@ type OkxStream struct {
 }
 
 // NewOkxStream 创建一个新的OkxStream
-func NewOkxStream(id string, st stream.StreamType, opts ...Option) *OkxStream {
+func NewOkxStream(id string, st types.StreamType, opts ...Option) *OkxStream {
 	b := &OkxStream{
 		id:                id,
 		st:                st,
@@ -111,7 +111,7 @@ func (b *OkxStream) ID() string {
 }
 
 // Type 返回当前连接的类型
-func (b *OkxStream) Type() stream.StreamType {
+func (b *OkxStream) Type() types.StreamType {
 	return b.st
 }
 
