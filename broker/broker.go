@@ -37,6 +37,9 @@ type Subscriber interface {
 	// 订阅可以是阻塞式，也可以异步在内部协程中进行消息消费。
 	Subscribe(ctx context.Context, topics []string, handler Handler, opts ...Option) error
 
+	// Unsubscribe用于取消订阅指定主题。
+	Unsubscribe(ctx context.Context, topics []string) error
+
 	// Close用于释放订阅者相关资源，断开与底层系统的连接。
 	Close() error
 }

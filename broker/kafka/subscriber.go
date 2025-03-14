@@ -26,6 +26,7 @@ type subscriber struct {
 	options broker.Options
 	handler broker.Handler
 	reader  *kafkaGo.Reader
+	stopCh  chan struct{}
 }
 
 type kafkaSubscriber struct {
@@ -38,7 +39,6 @@ type kafkaSubscriber struct {
 	saslMechanism  sasl.Mechanism
 	tlsConfig      *tls.Config
 	options        *broker.Options
-	stopCh         chan struct{}
 }
 
 func NewSubscriber(opts ...broker.Option) (broker.Subscriber, error) {
@@ -51,7 +51,6 @@ func NewSubscriber(opts ...broker.Option) (broker.Subscriber, error) {
 			MaxWait:               500 * time.Millisecond,
 		},
 		options: &po,
-		stopCh:  make(chan struct{}),
 	}
 
 	ks.applyOptions(po.Context)
@@ -83,6 +82,20 @@ func (s *kafkaSubscriber) Subscribe(ctx context.Context, topics []string, handle
 	return nil
 }
 
+func (s *kafkaSubscriber) Unsubscribe(ctx context.Context, topics []string) error {
+	for _, topic := range topics {
+		s.Lock()
+		sub, ok := s.suberMap[topic]
+		if ok {
+			sub.reader.Close()
+			close(sub.stopCh)
+			delete(s.suberMap, topic)
+		}
+		s.Unlock()
+	}
+	return nil
+}
+
 func (s *kafkaSubscriber) subscribe(ctx context.Context, topic string, handler broker.Handler, po broker.Options) error {
 	autoAck := true
 	queue := uuid.New().String()
@@ -105,12 +118,13 @@ func (s *kafkaSubscriber) subscribe(ctx context.Context, topic string, handler b
 		options: po,
 		handler: handler,
 		reader:  kafkaGo.NewReader(readerConfig),
+		stopCh:  make(chan struct{}),
 	}
 
 	go func() {
 		for {
 			select {
-			case <-s.stopCh:
+			case <-sub.stopCh:
 				return
 			case <-po.Context.Done():
 				return
@@ -161,10 +175,10 @@ func (s *kafkaSubscriber) Close() error {
 	s.Lock()
 	for _, sub := range s.suberMap {
 		sub.reader.Close()
+		close(sub.stopCh)
 	}
+	s.suberMap = make(map[string]*subscriber)
 	s.Unlock()
-
-	close(s.stopCh)
 
 	return nil
 }
