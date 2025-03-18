@@ -126,11 +126,11 @@ func (b *BnOrderManager) CreateOrder(ctx context.Context, req *exchange.CreateOr
 }
 
 func (b *BnOrderManager) CancelOrder(ctx context.Context, req *exchange.CancelOrderRequest) (*exchange.CancelOrderResponse, error) {
-	return nil, nil
+	return nil, errors.New("not implemented")
 }
 
 func (b *BnOrderManager) GetOrder(ctx context.Context, req *exchange.GetOrderRequest) (*exchange.GetOrderResponse, error) {
-	return nil, nil
+	return nil, errors.New("not implemented")
 }
 
 // 币转张(仅用于币本位合约) typ:1-币转张,2-张转币
