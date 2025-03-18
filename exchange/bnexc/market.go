@@ -37,8 +37,10 @@ func NewBnMarketData() *BnMarketData {
 
 func (b *BnMarketData) GetDepth(ctx context.Context, req *exchange.GetDepthRequest) (*exchange.GetDepthResponse, error) {
 	apiUrl := BNEX_API_SPOT_URL + "/api/v3/depth"
-	if req.Type == types.MarketTypeFuturesUSDMargined {
-		apiUrl = BNEX_API_FUTURES_URL + "/fapi/v1/depth"
+	if req.Type == types.MarketTypeFuturesUSDMargined || req.Type == types.MarketTypePerpetualUSDMargined {
+		apiUrl = BNEX_API_FUTURES_USD_URL + "/fapi/v1/depth"
+	} else if req.Type == types.MarketTypeFuturesCoinMargined || req.Type == types.MarketTypePerpetualCoinMargined {
+		apiUrl = BNEX_API_FUTURES_COIN_URL + "/dapi/v1/depth"
 	}
 	resp, err := b.client.DoRequest(&requests.Request{
 		Method: http.MethodGet,
