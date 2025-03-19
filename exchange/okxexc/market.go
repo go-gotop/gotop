@@ -10,22 +10,10 @@ import (
 	"github.com/go-gotop/gotop/exchange"
 	"github.com/go-gotop/gotop/requests"
 	okxreq "github.com/go-gotop/gotop/requests/okx"
-	"github.com/go-gotop/gotop/types"
 	"github.com/shopspring/decimal"
 )
 
 var _ exchange.MarketDataProvider = &OkxMarketData{}
-
-// OkxDepthResponse 获取市场深度响应
-type OkxDepthResponse struct {
-	Code string `json:"code"`
-	Msg  string `json:"msg"`
-	Data []struct {
-		Asks [][]string `json:"asks"`
-		Bids [][]string `json:"bids"`
-		Ts   string     `json:"ts"`
-	} `json:"data"`
-}
 
 // OkxMarketData 提供市场行情数据相关的接口方法
 type OkxMarketData struct {
@@ -43,9 +31,6 @@ func NewOkxMarketData() *OkxMarketData {
 
 func (o *OkxMarketData) GetDepth(ctx context.Context, req *exchange.GetDepthRequest) (*exchange.GetDepthResponse, error) {
 	apiUrl := OKX_API_BASE_URL + "/api/v5/market/books"
-	if req.Type == types.MarketTypeFuturesUSDMargined {
-		apiUrl = OKX_API_BASE_URL + "/api/v5/market/books-50"
-	}
 	resp, err := o.client.DoRequest(&requests.Request{
 		Method: http.MethodGet,
 		URL:    apiUrl,
@@ -65,7 +50,7 @@ func (o *OkxMarketData) GetDepth(ctx context.Context, req *exchange.GetDepthRequ
 		return nil, err
 	}
 
-	var depthResp OkxDepthResponse
+	var depthResp okxDepthResponse
 	err = json.Unmarshal(body, &depthResp)
 	if err != nil {
 		return nil, err
