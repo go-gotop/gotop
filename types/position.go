@@ -5,6 +5,53 @@ import (
 	"strings"
 )
 
+// PosMod 持仓模式：1-Isolated 逐仓, 2-Cross 全仓
+type PosMode int
+
+// String 返回字符串表示
+func (p PosMode) String() string {
+	switch p {
+	case PosModeIsolated:
+		return "ISOLATED"
+	case PosModeCross:
+		return "CROSS"
+	}
+	return "UNKNOWN"
+}
+
+// IsValid 判断 PosMod 是否为已定义的类型
+func (p PosMode) IsValid() bool {
+	switch p {
+	case PosModeIsolated,
+		PosModeCross:
+		return true
+	default:
+		return false
+	}
+}
+
+// ParsePosMode 从字符串解析 PosMode (不区分大小写)
+func ParsePosMode(s string) (PosMode, error) {
+	s = strings.ToUpper(strings.TrimSpace(s))
+	switch s {
+	case "ISOLATED":
+		return PosModeIsolated, nil
+	case "CROSS":
+		return PosModeCross, nil
+	default:
+		return PosModeUnknown, fmt.Errorf("unknown position mode: %s", s)
+	}
+}
+
+const (
+	// PosModeUnknown 未知
+	PosModeUnknown PosMode = iota
+	// PosModeIsolated 逐仓
+	PosModeIsolated
+	// PosModeCross 全仓
+	PosModeCross
+)
+
 // ExecutionType 订单执行类型: 1-ExecutionTypeNew, 2-ExecutionTypeTrade, 3-ExecutionTypeCanceled, 4-ExecutionTypeRejected, 5-ExecutionTypeExpired
 type ExecutionType int
 

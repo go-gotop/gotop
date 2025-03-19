@@ -139,7 +139,7 @@ func (b *BnOrderManager) convertContractCoin(typ string, symbol types.Symbol, si
 		return decimal.Zero, errors.New("invalid symbol market type")
 	}
 
-	if symbol.CtVal.Equal(decimal.Zero) {
+	if symbol.CtVal.IsZero() {
 		return decimal.Zero, errors.New("invalid symbol ct val")
 	}
 
@@ -174,7 +174,7 @@ func (b *BnOrderManager) convertContractCoin(typ string, symbol types.Symbol, si
 	return decimal.Zero, errors.New("invalid typ")
 }
 
-// 获取TickerPrice
+// 获取TickerPrice当前价格
 func (b *BnOrderManager) getTickerPrice(symbol types.Symbol, marketType types.MarketType) (decimal.Decimal, error) {
 	apiUrl := ""
 
