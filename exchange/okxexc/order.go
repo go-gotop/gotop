@@ -34,6 +34,14 @@ func NewOkxOrderManager() *OkxOrderManager {
 func (o *OkxOrderManager) CreateOrder(ctx context.Context, req *exchange.CreateOrderRequest) (*exchange.CreateOrderResponse, error) {
 	apiUrl := OKX_API_BASE_URL + "/api/v5/trade/order"
 
+	switch req.SizeUnit {
+	case types.SizeUnitContract:
+		if req.MarketType != types.MarketTypeFuturesUSDMargined && req.MarketType != types.MarketTypePerpetualUSDMargined && req.MarketType != types.MarketTypeFuturesCoinMargined && req.MarketType != types.MarketTypePerpetualCoinMargined {
+			return nil, errors.New("create order error: unsupported contract size unit")
+		}
+		
+	}
+
 	params, err := o.toOrderParams(req)
 	if err != nil {
 		return nil, err

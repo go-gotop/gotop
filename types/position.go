@@ -5,6 +5,65 @@ import (
 	"strings"
 )
 
+// SizeUnit 数量单位: 1-SizeUnitCoin 币, 2-SizeUnitContract 合约, 3-SizeUnitQuote 计价货币
+type SizeUnit int
+
+// String 返回字符串表示
+func (s SizeUnit) String() string {
+	switch s {
+	case SizeUnitUnknown:
+		return "UNKNOWN"
+	case SizeUnitCoin:
+		return "COIN"
+	case SizeUnitContract:
+		return "CONTRACT"
+	case SizeUnitQuote:
+		return "QUOTE"
+	}
+	return "UNKNOWN"
+}
+
+// IsValid 判断 SizeUnit 是否为已定义的类型
+func (s SizeUnit) IsValid() bool {
+	switch s {
+	case SizeUnitUnknown,
+		SizeUnitCoin,
+		SizeUnitContract,
+		SizeUnitQuote:
+		return true
+	default:
+		return false
+	}
+}
+
+// ParseSizeUnit 从字符串解析 SizeUnit (不区分大小写)
+func ParseSizeUnit(s string) (SizeUnit, error) {
+	s = strings.ToUpper(strings.TrimSpace(s))
+	switch s {
+	case "UNKNOWN":
+		return SizeUnitUnknown, nil
+	case "COIN":
+		return SizeUnitCoin, nil
+	case "CONTRACT":
+		return SizeUnitContract, nil
+	case "QUOTE":
+		return SizeUnitQuote, nil
+	default:
+		return SizeUnitUnknown, fmt.Errorf("unknown size unit: %s", s)
+	}
+}
+
+const (
+	// SizeUnitUnknown 未知
+	SizeUnitUnknown SizeUnit = iota
+	// SizeUnitCoin 币
+	SizeUnitCoin
+	// SizeUnitContract 合约
+	SizeUnitContract
+	// SizeUnitQuote 计价货币
+	SizeUnitQuote
+)
+
 // PosMod 持仓模式：1-Isolated 逐仓, 2-Cross 全仓
 type PosMode int
 

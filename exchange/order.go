@@ -62,6 +62,8 @@ type CreateOrderRequest struct {
 	Price decimal.Decimal
 	// Size 数量
 	Size decimal.Decimal
+	// SizeUnit 数量单位
+	SizeUnit types.SizeUnit
 	// TimeInForce 有效期类型
 	TimeInForce types.TimeInForce
 }

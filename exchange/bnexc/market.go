@@ -117,3 +117,81 @@ func (b *BnMarketData) GetDepth(ctx context.Context, req *exchange.GetDepthReque
 func (b *BnMarketData) GetMarkPriceKline(ctx context.Context, req *exchange.GetMarkPriceKlineRequest) (*exchange.GetMarkPriceKlineResponse, error) {
 	return nil, nil
 }
+
+func (b *BnMarketData) ConvertCoinToContract(ctx context.Context, req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
+	if req.MarketType != types.MarketTypeFuturesCoinMargined && req.MarketType != types.MarketTypePerpetualCoinMargined {
+		return decimal.Zero, fmt.Errorf("invalid market type: %s", req.MarketType)
+	}
+
+	if req.Price.IsZero() {
+		return decimal.Zero, fmt.Errorf("price is required")
+	}
+
+	if req.Size.IsZero() {
+		return decimal.Zero, fmt.Errorf("size is required")
+	}
+
+	if req.CtVal.IsZero() {
+		return decimal.Zero, fmt.Errorf("ctVal is required")
+	}
+
+	totalQuote := req.Size.Mul(req.Price)
+	size := totalQuote.Div(req.CtVal)
+	return size, nil
+}
+
+func (b *BnMarketData) ConvertContractToCoin(ctx context.Context, req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
+	if req.MarketType != types.MarketTypeFuturesCoinMargined && req.MarketType != types.MarketTypePerpetualCoinMargined {
+		return decimal.Zero, fmt.Errorf("invalid market type: %s", req.MarketType)
+	}
+
+	if req.Price.IsZero() {
+		return decimal.Zero, fmt.Errorf("price is required")
+	}
+
+	if req.Size.IsZero() {
+		return decimal.Zero, fmt.Errorf("size is required")
+	}
+
+	if req.CtVal.IsZero() {
+		return decimal.Zero, fmt.Errorf("ctVal is required")
+	}
+
+	totalQuote := req.Size.Mul(req.CtVal)
+	size := totalQuote.Div(req.Price)
+	return size, nil
+}
+
+func (b *BnMarketData) ConvertQuoteToContract(ctx context.Context, req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
+	if req.MarketType != types.MarketTypeFuturesUSDMargined && req.MarketType != types.MarketTypePerpetualUSDMargined {
+		return decimal.Zero, fmt.Errorf("invalid market type: %s", req.MarketType)
+	}
+
+	if req.Size.IsZero() {
+		return decimal.Zero, fmt.Errorf("size is required")
+	}
+
+	if req.CtVal.IsZero() {
+		return decimal.Zero, fmt.Errorf("ctVal is required")
+	}
+
+	size := req.Size.Div(req.CtVal)
+	return size, nil
+}
+
+func (b *BnMarketData) ConvertContractToQuote(ctx context.Context, req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
+	if req.MarketType != types.MarketTypeFuturesUSDMargined && req.MarketType != types.MarketTypePerpetualUSDMargined {
+		return decimal.Zero, fmt.Errorf("invalid market type: %s", req.MarketType)
+	}
+
+	if req.Size.IsZero() {
+		return decimal.Zero, fmt.Errorf("size is required")
+	}
+
+	if req.CtVal.IsZero() {
+		return decimal.Zero, fmt.Errorf("ctVal is required")
+	}
+
+	totalQuote := req.Size.Mul(req.CtVal)
+	return totalQuote, nil
+}
