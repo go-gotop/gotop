@@ -2,6 +2,9 @@ package exchange
 
 import (
 	"context"
+
+	"github.com/go-gotop/gotop/types"
+	"github.com/shopspring/decimal"
 )
 
 // OrderManager 提供订单管理相关接口方法，如创建、撤销、查询订单等
@@ -35,31 +38,56 @@ type OrderManager interface {
 }
 
 type CreateOrderRequest struct {
-
+	// APIKey 用户APIKey
+	APIKey string
+	// SecretKey 用户SecretKey
+	SecretKey string
+	// Passphrase 用户Passphrase
+	Passphrase string
+	// ClientOrderID 客户订单ID
+	ClientOrderID string
+	// OrderTime 下单时间戳
+	OrderTime int64
+	// Symbol 交易对
+	Symbol types.Symbol
+	// OrderType 订单类型
+	OrderType types.OrderType
+	// MarketType 市场类型
+	MarketType types.MarketType
+	// Side 方向
+	Side types.SideType
+	// PositionSide 仓位方向
+	PositionSide types.PositionSide
+	// Price 价格
+	Price decimal.Decimal
+	// Size 数量
+	Size decimal.Decimal
+	// SizeUnit 数量单位
+	SizeUnit types.SizeUnit
+	// TimeInForce 有效期类型
+	TimeInForce types.TimeInForce
 }
 
 type CreateOrderResponse struct {
-
+	// Symbol 交易对
+	Symbol string
+	// OrderID 订单ID
+	OrderID string
+	// ClientOrderID 客户订单ID
+	ClientOrderID string
 }
 
-
-
 type CancelOrderRequest struct {
-
 }
 
 type CancelOrderResponse struct {
-
 }
 
 type GetOrderRequest struct {
-
 }
 
 type GetOrderResponse struct {
-
 }
 
 type Order struct {
-
 }

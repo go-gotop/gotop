@@ -27,6 +27,50 @@ type MarketDataProvider interface {
 	//   *GetMarkPriceKlineResponse: 包含K线数据点的列表。
 	//   error: 请求失败时返回错误信息。
 	GetMarkPriceKline(ctx context.Context, req *GetMarkPriceKlineRequest) (*GetMarkPriceKlineResponse, error)
+
+	// ConvertCoinToContract 将币转换为张(未处理标的物精度)
+	// 参数：
+	//   ctx: 上下文，用于控制请求超时、取消等。
+	//   req: 请求参数对象，包含合约面值(ctVal)、数量(size)、市场类型(marketType)、价格(price)等信息。
+	// 返回值：
+	//   decimal.Decimal: 转换后的数量
+	ConvertCoinToContract(ctx context.Context, req *ConvertSizeUnitRequest) (decimal.Decimal, error)
+
+	// ConvertContractToCoin 将张转换为币(未处理标的物精度)
+	// 参数：
+	//   ctx: 上下文，用于控制请求超时、取消等。
+	//   req: 请求参数对象，包含合约面值(ctVal)、数量(size)、市场类型(marketType)、价格(price)等信息。
+	// 返回值：
+	//   decimal.Decimal: 转换后的数量
+	ConvertContractToCoin(ctx context.Context, req *ConvertSizeUnitRequest) (decimal.Decimal, error)
+
+	// ConvertQuoteToContract 将报价转换为张(未处理标的物精度)
+	// 参数：
+	//   ctx: 上下文，用于控制请求超时、取消等。
+	//   req: 请求参数对象，包含合约面值(ctVal)、数量(size)、市场类型(marketType)、价格(price)等信息。
+	// 返回值：
+	//   decimal.Decimal: 转换后的数量
+	ConvertQuoteToContract(ctx context.Context, req *ConvertSizeUnitRequest) (decimal.Decimal, error)
+
+	// ConvertContractToQuote 将张转换为报价(未处理标的物精度)
+	// 参数：
+	//   ctx: 上下文，用于控制请求超时、取消等。
+	//   req: 请求参数对象，包含合约面值(ctVal)、数量(size)、市场类型(marketType)、价格(price)等信息。
+	// 返回值：
+	//   decimal.Decimal: 转换后的数量
+	ConvertContractToQuote(ctx context.Context, req *ConvertSizeUnitRequest) (decimal.Decimal, error)
+}
+
+// ConvertSizeUnitRequest 转换数量单位请求参数
+type ConvertSizeUnitRequest struct {
+	// CtVal 合约面值
+	CtVal decimal.Decimal
+	// Size 数量
+	Size decimal.Decimal
+	// MarketType 市场类型
+	MarketType types.MarketType
+	// Price 价格
+	Price decimal.Decimal
 }
 
 // GetDepthRequest 获取深度请求参数
@@ -62,13 +106,10 @@ type DepthItem struct {
 }
 
 type GetMarkPriceKlineRequest struct {
-
 }
 
 type GetMarkPriceKlineResponse struct {
-
 }
 
 type Kline struct {
-
 }

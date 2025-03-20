@@ -5,6 +5,112 @@ import (
 	"strings"
 )
 
+// SizeUnit 数量单位: 1-SizeUnitCoin 币, 2-SizeUnitContract 合约, 3-SizeUnitQuote 计价货币
+type SizeUnit int
+
+// String 返回字符串表示
+func (s SizeUnit) String() string {
+	switch s {
+	case SizeUnitUnknown:
+		return "UNKNOWN"
+	case SizeUnitCoin:
+		return "COIN"
+	case SizeUnitContract:
+		return "CONTRACT"
+	case SizeUnitQuote:
+		return "QUOTE"
+	}
+	return "UNKNOWN"
+}
+
+// IsValid 判断 SizeUnit 是否为已定义的类型
+func (s SizeUnit) IsValid() bool {
+	switch s {
+	case SizeUnitUnknown,
+		SizeUnitCoin,
+		SizeUnitContract,
+		SizeUnitQuote:
+		return true
+	default:
+		return false
+	}
+}
+
+// ParseSizeUnit 从字符串解析 SizeUnit (不区分大小写)
+func ParseSizeUnit(s string) (SizeUnit, error) {
+	s = strings.ToUpper(strings.TrimSpace(s))
+	switch s {
+	case "UNKNOWN":
+		return SizeUnitUnknown, nil
+	case "COIN":
+		return SizeUnitCoin, nil
+	case "CONTRACT":
+		return SizeUnitContract, nil
+	case "QUOTE":
+		return SizeUnitQuote, nil
+	default:
+		return SizeUnitUnknown, fmt.Errorf("unknown size unit: %s", s)
+	}
+}
+
+const (
+	// SizeUnitUnknown 未知
+	SizeUnitUnknown SizeUnit = iota
+	// SizeUnitCoin 币
+	SizeUnitCoin
+	// SizeUnitContract 合约
+	SizeUnitContract
+	// SizeUnitQuote 计价货币
+	SizeUnitQuote
+)
+
+// PosMod 持仓模式：1-Isolated 逐仓, 2-Cross 全仓
+type PosMode int
+
+// String 返回字符串表示
+func (p PosMode) String() string {
+	switch p {
+	case PosModeIsolated:
+		return "ISOLATED"
+	case PosModeCross:
+		return "CROSS"
+	}
+	return "UNKNOWN"
+}
+
+// IsValid 判断 PosMod 是否为已定义的类型
+func (p PosMode) IsValid() bool {
+	switch p {
+	case PosModeIsolated,
+		PosModeCross:
+		return true
+	default:
+		return false
+	}
+}
+
+// ParsePosMode 从字符串解析 PosMode (不区分大小写)
+func ParsePosMode(s string) (PosMode, error) {
+	s = strings.ToUpper(strings.TrimSpace(s))
+	switch s {
+	case "ISOLATED":
+		return PosModeIsolated, nil
+	case "CROSS":
+		return PosModeCross, nil
+	default:
+		return PosModeUnknown, fmt.Errorf("unknown position mode: %s", s)
+	}
+}
+
+const (
+	// PosModeUnknown 未知
+	PosModeUnknown PosMode = iota
+	// PosModeIsolated 逐仓
+	PosModeIsolated
+	// PosModeCross 全仓
+	PosModeCross
+)
+
 // ExecutionType 订单执行类型: 1-ExecutionTypeNew, 2-ExecutionTypeTrade, 3-ExecutionTypeCanceled, 4-ExecutionTypeRejected, 5-ExecutionTypeExpired
 type ExecutionType int
 

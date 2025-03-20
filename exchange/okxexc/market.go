@@ -16,17 +16,6 @@ import (
 
 var _ exchange.MarketDataProvider = &OkxMarketData{}
 
-// OkxDepthResponse 获取市场深度响应
-type OkxDepthResponse struct {
-	Code string `json:"code"`
-	Msg  string `json:"msg"`
-	Data []struct {
-		Asks [][]string `json:"asks"`
-		Bids [][]string `json:"bids"`
-		Ts   string     `json:"ts"`
-	} `json:"data"`
-}
-
 // OkxMarketData 提供市场行情数据相关的接口方法
 type OkxMarketData struct {
 	client requests.RequestClient
@@ -43,9 +32,6 @@ func NewOkxMarketData() *OkxMarketData {
 
 func (o *OkxMarketData) GetDepth(ctx context.Context, req *exchange.GetDepthRequest) (*exchange.GetDepthResponse, error) {
 	apiUrl := OKX_API_BASE_URL + "/api/v5/market/books"
-	if req.Type == types.MarketTypeFuturesUSDMargined {
-		apiUrl = OKX_API_BASE_URL + "/api/v5/market/books-50"
-	}
 	resp, err := o.client.DoRequest(&requests.Request{
 		Method: http.MethodGet,
 		URL:    apiUrl,
@@ -65,7 +51,7 @@ func (o *OkxMarketData) GetDepth(ctx context.Context, req *exchange.GetDepthRequ
 		return nil, err
 	}
 
-	var depthResp OkxDepthResponse
+	var depthResp okxDepthResponse
 	err = json.Unmarshal(body, &depthResp)
 	if err != nil {
 		return nil, err
@@ -130,4 +116,98 @@ func (o *OkxMarketData) GetDepth(ctx context.Context, req *exchange.GetDepthRequ
 func (o *OkxMarketData) GetMarkPriceKline(ctx context.Context, req *exchange.GetMarkPriceKlineRequest) (*exchange.GetMarkPriceKlineResponse, error) {
 	// 暂未实现
 	return nil, fmt.Errorf("方法未实现")
+}
+
+func (o *OkxMarketData) ConvertCoinToContract(ctx context.Context, req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
+	if req.CtVal.IsZero() {
+		return decimal.Zero, fmt.Errorf("ctVal is required")
+	}
+
+	switch req.MarketType {
+	case types.MarketTypeFuturesUSDMargined, types.MarketTypePerpetualUSDMargined:
+		size := req.Size.Div(req.CtVal)
+		return size, nil
+	case types.MarketTypeFuturesCoinMargined, types.MarketTypePerpetualCoinMargined:
+		if req.Price.IsZero() {
+			return decimal.Zero, fmt.Errorf("price is required")
+		}
+		totalQuote := req.Size.Mul(req.Price)
+		size := totalQuote.Div(req.CtVal)
+		return size, nil
+	default:
+		return decimal.Zero, fmt.Errorf("invalid market type: %s", req.MarketType)
+	}
+}
+
+func (o *OkxMarketData) ConvertContractToCoin(ctx context.Context, req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
+	if req.CtVal.IsZero() {
+		return decimal.Zero, fmt.Errorf("ctVal is required")
+	}
+
+	if req.Size.IsZero() {
+		return decimal.Zero, fmt.Errorf("size is required")
+	}
+
+	switch req.MarketType {
+	case types.MarketTypeFuturesUSDMargined, types.MarketTypePerpetualUSDMargined:
+		size := req.Size.Mul(req.CtVal)
+		return size, nil
+	case types.MarketTypeFuturesCoinMargined, types.MarketTypePerpetualCoinMargined:
+		if req.Price.IsZero() {
+			return decimal.Zero, fmt.Errorf("price is required")
+		}
+		totalQuote := req.Size.Mul(req.CtVal)
+		size := totalQuote.Div(req.Price)
+		return size, nil
+	default:
+		return decimal.Zero, fmt.Errorf("invalid market type: %s", req.MarketType)
+	}
+}
+
+func (o *OkxMarketData) ConvertQuoteToContract(ctx context.Context, req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
+	if req.CtVal.IsZero() {
+		return decimal.Zero, fmt.Errorf("ctVal is required")
+	}
+
+	if req.Size.IsZero() {
+		return decimal.Zero, fmt.Errorf("size is required")
+	}
+
+	switch req.MarketType {
+	case types.MarketTypeFuturesUSDMargined, types.MarketTypePerpetualUSDMargined:
+		if req.Price.IsZero() {
+			return decimal.Zero, fmt.Errorf("price is required")
+		}
+		size := req.Size.Div(req.Price).Div(req.CtVal)
+		return size, nil
+	case types.MarketTypeFuturesCoinMargined, types.MarketTypePerpetualCoinMargined:
+		size := req.Size.Div(req.CtVal)
+		return size, nil
+	default:
+		return decimal.Zero, fmt.Errorf("invalid market type: %s", req.MarketType)
+	}
+}
+
+func (o *OkxMarketData) ConvertContractToQuote(ctx context.Context, req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
+	if req.CtVal.IsZero() {
+		return decimal.Zero, fmt.Errorf("ctVal is required")
+	}
+
+	if req.Size.IsZero() {
+		return decimal.Zero, fmt.Errorf("size is required")
+	}
+
+	switch req.MarketType {
+	case types.MarketTypeFuturesUSDMargined, types.MarketTypePerpetualUSDMargined:
+		if req.Price.IsZero() {
+			return decimal.Zero, fmt.Errorf("price is required")
+		}
+		totalQuote := req.Size.Mul(req.CtVal).Mul(req.Price)
+		return totalQuote, nil
+	case types.MarketTypeFuturesCoinMargined, types.MarketTypePerpetualCoinMargined:
+		totalQuote := req.Size.Mul(req.CtVal)
+		return totalQuote, nil
+	default:
+		return decimal.Zero, fmt.Errorf("invalid market type: %s", req.MarketType)
+	}
 }

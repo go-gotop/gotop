@@ -33,6 +33,8 @@ type StrategySignalEvent struct {
 	Symbol string
 	// Size 头寸数量
 	Size decimal.Decimal
+	// SizeUnit 数量单位
+	SizeUnit types.SizeUnit
 	// Price 交易价格
 	Price decimal.Decimal
 	// CreatedBy 创建者 USER, SYSTEM
