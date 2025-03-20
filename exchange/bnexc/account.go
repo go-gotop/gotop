@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 
 	"github.com/go-gotop/gotop/exchange"
 	"github.com/go-gotop/gotop/requests"
 	bnexreq "github.com/go-gotop/gotop/requests/binance"
+	"github.com/shopspring/decimal"
 )
 
 var _ exchange.AccountManager = &BnAccountManager{}
@@ -65,18 +65,24 @@ func (b *BnAccountManager) GetBalances(ctx context.Context, authInfo exchange.Au
 	}
 
 	for _, asset := range capitalInfo {
-		free, err := strconv.ParseFloat(asset.Free, 64)
-		if err != nil {
-			free = 0
+		free := decimal.Zero
+		if asset.Free != "" {
+			free, err = decimal.NewFromString(asset.Free)
+			if err != nil {
+				free = decimal.Zero
+			}
 		}
 
-		locked, err := strconv.ParseFloat(asset.Locked, 64)
-		if err != nil {
-			locked = 0
+		locked := decimal.Zero
+		if asset.Locked != "" {
+			locked, err = decimal.NewFromString(asset.Locked)
+			if err != nil {
+				locked = decimal.Zero
+			}
 		}
 
 		// 只返回有余额的资产
-		if free > 0 || locked > 0 {
+		if !free.IsZero() || !locked.IsZero() {
 			result.Balances = append(result.Balances, exchange.Balance{
 				Asset:     asset.Coin,
 				Available: free,
@@ -125,14 +131,20 @@ func (b *BnAccountManager) GetBalance(ctx context.Context, authInfo exchange.Aut
 
 	for _, item := range capitalInfo {
 		if item.Coin == asset {
-			free, err := strconv.ParseFloat(item.Free, 64)
-			if err != nil {
-				free = 0
+			free := decimal.Zero
+			if item.Free != "" {
+				free, err = decimal.NewFromString(item.Free)
+				if err != nil {
+					free = decimal.Zero
+				}
 			}
 
-			locked, err := strconv.ParseFloat(item.Locked, 64)
-			if err != nil {
-				locked = 0
+			locked := decimal.Zero
+			if item.Locked != "" {
+				locked, err = decimal.NewFromString(item.Locked)
+				if err != nil {
+					locked = decimal.Zero
+				}
 			}
 
 			return &exchange.GetBalanceResponse{

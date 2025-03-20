@@ -2,6 +2,8 @@ package exchange
 
 import (
 	"context"
+
+	"github.com/shopspring/decimal"
 )
 
 // AccountManager 提供账户管理相关接口，如账户余额查询，账户信息获取
@@ -36,8 +38,8 @@ type GetBalancesResponse struct {
 
 type Balance struct {
 	Asset     string
-	Available float64
-	Locked    float64
+	Available decimal.Decimal
+	Locked    decimal.Decimal
 }
 
 type GetBalanceResponse struct {

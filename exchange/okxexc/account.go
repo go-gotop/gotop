@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 
 	"github.com/go-gotop/gotop/exchange"
 	"github.com/go-gotop/gotop/requests"
 	okxreq "github.com/go-gotop/gotop/requests/okx"
+	"github.com/shopspring/decimal"
 )
 
 var _ exchange.AccountManager = &OkxAccountManager{}
@@ -73,18 +73,24 @@ func (m *OkxAccountManager) GetBalances(ctx context.Context, authInfo exchange.A
 	if len(balanceResp.Data) > 0 {
 		for _, data := range balanceResp.Data {
 			for _, detail := range data.Details {
-				availBal, err := strconv.ParseFloat(detail.AvailBal, 64)
-				if err != nil {
-					availBal = 0
+				availBal := decimal.Zero
+				if detail.AvailBal != "" {
+					availBal, err = decimal.NewFromString(detail.AvailBal)
+					if err != nil {
+						availBal = decimal.Zero
+					}
 				}
 
-				frozenBal, err := strconv.ParseFloat(detail.FrozenBal, 64)
-				if err != nil {
-					frozenBal = 0
+				frozenBal := decimal.Zero
+				if detail.FrozenBal != "" {
+					frozenBal, err = decimal.NewFromString(detail.FrozenBal)
+					if err != nil {
+						frozenBal = decimal.Zero
+					}
 				}
 
 				// 只返回有余额的资产
-				if availBal > 0 || frozenBal > 0 {
+				if !availBal.IsZero() || !frozenBal.IsZero() {
 					result.Balances = append(result.Balances, exchange.Balance{
 						Asset:     detail.Ccy,
 						Available: availBal,
@@ -151,14 +157,20 @@ func (m *OkxAccountManager) GetBalance(ctx context.Context, authInfo exchange.Au
 	for _, data := range balanceResp.Data {
 		for _, detail := range data.Details {
 			if detail.Ccy == asset {
-				availBal, err := strconv.ParseFloat(detail.AvailBal, 64)
-				if err != nil {
-					availBal = 0
+				availBal := decimal.Zero
+				if detail.AvailBal != "" {
+					availBal, err = decimal.NewFromString(detail.AvailBal)
+					if err != nil {
+						availBal = decimal.Zero
+					}
 				}
 
-				frozenBal, err := strconv.ParseFloat(detail.FrozenBal, 64)
-				if err != nil {
-					frozenBal = 0
+				frozenBal := decimal.Zero
+				if detail.FrozenBal != "" {
+					frozenBal, err = decimal.NewFromString(detail.FrozenBal)
+					if err != nil {
+						frozenBal = decimal.Zero
+					}
 				}
 
 				return &exchange.GetBalanceResponse{
