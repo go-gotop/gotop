@@ -118,7 +118,7 @@ func (b *BnMarketData) GetMarkPriceKline(ctx context.Context, req *exchange.GetM
 	return nil, nil
 }
 
-func (b *BnMarketData) ConvertCoinToContract(ctx context.Context, req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
+func ConvertCoinToContract(ctx context.Context, req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
 	if req.MarketType != types.MarketTypeFuturesCoinMargined && req.MarketType != types.MarketTypePerpetualCoinMargined {
 		return decimal.Zero, fmt.Errorf("invalid market type: %s", req.MarketType)
 	}
@@ -140,7 +140,7 @@ func (b *BnMarketData) ConvertCoinToContract(ctx context.Context, req *exchange.
 	return size, nil
 }
 
-func (b *BnMarketData) ConvertContractToCoin(ctx context.Context, req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
+func ConvertContractToCoin(ctx context.Context, req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
 	if req.MarketType != types.MarketTypeFuturesCoinMargined && req.MarketType != types.MarketTypePerpetualCoinMargined {
 		return decimal.Zero, fmt.Errorf("invalid market type: %s", req.MarketType)
 	}
@@ -162,7 +162,7 @@ func (b *BnMarketData) ConvertContractToCoin(ctx context.Context, req *exchange.
 	return size, nil
 }
 
-func (b *BnMarketData) ConvertQuoteToContract(ctx context.Context, req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
+func ConvertQuoteToContract(ctx context.Context, req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
 	if req.MarketType != types.MarketTypeFuturesUSDMargined && req.MarketType != types.MarketTypePerpetualUSDMargined {
 		return decimal.Zero, fmt.Errorf("invalid market type: %s", req.MarketType)
 	}
@@ -179,7 +179,7 @@ func (b *BnMarketData) ConvertQuoteToContract(ctx context.Context, req *exchange
 	return size, nil
 }
 
-func (b *BnMarketData) ConvertContractToQuote(ctx context.Context, req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
+func ConvertContractToQuote(ctx context.Context, req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
 	if req.MarketType != types.MarketTypeFuturesUSDMargined && req.MarketType != types.MarketTypePerpetualUSDMargined {
 		return decimal.Zero, fmt.Errorf("invalid market type: %s", req.MarketType)
 	}
