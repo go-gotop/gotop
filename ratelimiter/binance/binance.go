@@ -1,78 +1,70 @@
 package binance
 
 import (
-    "time"
+	"context"
+	"errors"
 
-    "github.com/go-gotop/gotop/ratelimiter"	
+	"github.com/go-gotop/gotop/ratelimiter"
+	"github.com/go-gotop/gotop/types"
+	"github.com/redis/go-redis/v9"
 )
 
-// BinanceAlgorithm 是一个针对binance键的限流算法
-type BinanceAlgorithm struct {
-    // 在真实环境中这里会有一个 redisClient 等，用于存取计数
-    // 这里用内存map模拟（非线程安全示例）
-    counters map[string]int
-    expiries map[string]time.Time
+type BinanceRateLimiterRequest struct {
+	RequestType ratelimiter.RequestType
+	IP          string
+	AccountID   string
+	MarketType  types.MarketType
 }
 
-// NewBinanceAlgorithm 创建一个示例算法实例
-func NewBinanceAlgorithm() *BinanceAlgorithm {
-    return &BinanceAlgorithm{
-        counters: make(map[string]int),
-        expiries: make(map[string]time.Time),
-    }
+// ============================ RateLimiterManager ============================
+
+type BinanceRateLimiterManager struct {
+	redisClient *redis.Client
 }
 
-func (b *BinanceAlgorithm) Check(key string) (ratelimiter.RateLimitDecision, error) {
-    // 判定规则示例：
-    // global key: "binance:global:http"
-    //   - 时间窗口：1秒
-    //   - 上限：10次
-    // api key key: "binance:api_key:xxx"
-    //   - 时间窗口：1分钟
-    //   - 上限：1200次
-
-    allowed := true
-    retryAfter := time.Duration(0)
-    reason := ""
-
-    now := time.Now()
-
-    var window time.Duration
-    var limit int
-
-    if key == "binance:global:http" {
-        window = time.Second
-        limit = 10
-    } else if len(key) > len("binance:api_key:") && key[:len("binance:api_key:")] == "binance:api_key:" {
-        window = time.Minute
-        limit = 1200
-    } else {
-        // 不认识的key不处理，直接允许
-        return ratelimiter.RateLimitDecision{Allowed: true}, nil
-    }
-
-    // 清理过期
-    if exp, ok := b.expiries[key]; ok && now.After(exp) {
-        delete(b.counters, key)
-        delete(b.expiries, key)
-    }
-
-    count := b.counters[key]
-
-    // 判断是否超标
-    if count >= limit {
-        allowed = false
-        retryAfter = window // 简单示例，让调用方等一个窗口再试
-        reason = "rate limit exceeded"
-    }
-
-    return ratelimiter.RateLimitDecision{
-        Allowed:    allowed,
-        RetryAfter: retryAfter,
-        Reason:     reason,
-    }, nil
+func NewBinanceRateLimiterManager(
+	redisClient *redis.Client,
+) *BinanceRateLimiterManager {
+	return &BinanceRateLimiterManager{
+		redisClient: redisClient,
+	}
 }
 
-func (b *BinanceAlgorithm) Record(key string) error {
-    return nil
+// GetRedisClient 返回Redis客户端，用于测试
+func (m *BinanceRateLimiterManager) GetRedisClient() *redis.Client {
+	return m.redisClient
+}
+
+func (m *BinanceRateLimiterManager) PreCheck(ctx context.Context, request BinanceRateLimiterRequest) (ratelimiter.RateLimitDecision, error) {
+	rateLimiters := make([]ratelimiter.RateLimiter[BinanceRateLimiterRequest], 0)
+
+	switch request.RequestType {
+	case ratelimiter.RequestTypeOrder:
+		rateLimiters = append(rateLimiters, NewOrderRateLimiter(m.redisClient))
+		rateLimiters = append(rateLimiters, NewIPRateLimiter(m.redisClient))
+	case ratelimiter.RequestTypeNormal:
+		rateLimiters = append(rateLimiters, NewIPRateLimiter(m.redisClient))
+	default:
+		return ratelimiter.RateLimitDecision{
+			Allowed: false,
+			Reason:  "unsupported request type",
+		}, errors.New("unsupported request type")
+	}
+
+	for _, rateLimiter := range rateLimiters {
+		decision, err := rateLimiter.Check(ctx, request)
+		if err != nil {
+			return ratelimiter.RateLimitDecision{
+				Allowed: false,
+				Reason:  err.Error(),
+			}, err
+		}
+		if !decision.Allowed {
+			return decision, nil
+		}
+	}
+
+	return ratelimiter.RateLimitDecision{
+		Allowed: true,
+	}, nil
 }
