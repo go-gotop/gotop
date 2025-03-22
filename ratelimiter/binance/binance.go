@@ -5,16 +5,8 @@ import (
 	"errors"
 
 	"github.com/go-gotop/gotop/ratelimiter"
-	"github.com/go-gotop/gotop/types"
 	"github.com/redis/go-redis/v9"
 )
-
-type BinanceRateLimiterRequest struct {
-	RequestType ratelimiter.RequestType
-	IP          string
-	AccountID   string
-	MarketType  types.MarketType
-}
 
 // ============================ RateLimiterManager ============================
 
@@ -35,8 +27,8 @@ func (m *BinanceRateLimiterManager) GetRedisClient() *redis.Client {
 	return m.redisClient
 }
 
-func (m *BinanceRateLimiterManager) PreCheck(ctx context.Context, request BinanceRateLimiterRequest) (ratelimiter.RateLimitDecision, error) {
-	rateLimiters := make([]ratelimiter.RateLimiter[BinanceRateLimiterRequest], 0)
+func (m *BinanceRateLimiterManager) PreCheck(ctx context.Context, request ratelimiter.ExchangeRateLimiterRequest) (ratelimiter.RateLimitDecision, error) {
+	rateLimiters := make([]ratelimiter.RateLimiter[ratelimiter.ExchangeRateLimiterRequest], 0)
 
 	switch request.RequestType {
 	case ratelimiter.RequestTypeOrder:

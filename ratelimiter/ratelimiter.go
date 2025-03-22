@@ -3,6 +3,8 @@ package ratelimiter
 import (
 	"context"
 	"time"
+
+	"github.com/go-gotop/gotop/types"
 )
 
 // RequestType 表示请求类型，例如 HTTP 或 WebSocket
@@ -14,6 +16,20 @@ const (
 	// RequestTypeNormal 普通请求
 	RequestTypeNormal RequestType = "request"
 )
+
+// ExchangeRateLimiterRequest 表示交易所限流器请求的上下文
+type ExchangeRateLimiterRequest struct {
+	// 交易所类型
+	Exchange string
+	// IP
+	IP string
+	// 用户ID
+	AccountID string
+	// 市场类型
+	MarketType types.MarketType
+	// 请求类型
+	RequestType RequestType
+}
 
 // RateLimitRule 表示限流规则
 // 通用限流规则结构体，用于描述限流规则的窗口大小和阈值
@@ -39,20 +55,6 @@ type RateLimitDecision struct {
 type RateLimiter[T any] interface {
 	// Check 根据请求上下文决定是否允许通过
 	Check(ctx context.Context, request T) (RateLimitDecision, error)
-}
-
-// KeyExtractor 接口用于从请求类型 T 中提取关键信息（键）用于限流算法的判定。
-// K 是键的类型（如字符串、元组或自定义可比较类型）。
-// 对于交易所请求，可以将 (Exchange, RequestType, IP, UserID, Endpoint) 等字段拼接成键或键组。
-type KeyExtractor[T any, K comparable] interface {
-	ExtractKeys(request T) []K
-}
-
-// RateLimiterProvider 用于根据请求上下文 T 动态返回需要检查的限流器列表。
-// 不同的交易所、请求类型、用户、IP等维度可能需要叠加多个限流规则（多个 RateLimiter）。
-type RateLimiterProvider[T any] interface {
-	// GetRateLimiters 获取限流器列表
-	GetRateLimiters(request T) ([]RateLimiter[T], error)
 }
 
 // RateLimitManager 是对上层业务的统一抽象接口，

@@ -16,13 +16,13 @@ type OrderRateLimiter struct {
 	timesAlgorithm *TimesAlgorithm
 }
 
-func NewOrderRateLimiter(redisClient *redis.Client) ratelimiter.RateLimiter[BinanceRateLimiterRequest] {
+func NewOrderRateLimiter(redisClient *redis.Client) ratelimiter.RateLimiter[ratelimiter.ExchangeRateLimiterRequest] {
 	return &OrderRateLimiter{
 		timesAlgorithm: NewTimesAlgorithm(redisClient),
 	}
 }
 
-func (r *OrderRateLimiter) Check(ctx context.Context, request BinanceRateLimiterRequest) (ratelimiter.RateLimitDecision, error) {
+func (r *OrderRateLimiter) Check(ctx context.Context, request ratelimiter.ExchangeRateLimiterRequest) (ratelimiter.RateLimitDecision, error) {
 	rules, err := getRules(r.extractRuleKey(request))
 	if err != nil {
 		return ratelimiter.RateLimitDecision{
@@ -42,7 +42,7 @@ func (r *OrderRateLimiter) Check(ctx context.Context, request BinanceRateLimiter
 	return decision, nil
 }
 
-func (r *OrderRateLimiter) extractRuleKey(request BinanceRateLimiterRequest) string {
+func (r *OrderRateLimiter) extractRuleKey(request ratelimiter.ExchangeRateLimiterRequest) string {
 	marketType := ""
 	switch request.MarketType {
 	case types.MarketTypeSpot, types.MarketTypeMargin:
@@ -58,7 +58,7 @@ func (r *OrderRateLimiter) extractRuleKey(request BinanceRateLimiterRequest) str
 	return fmt.Sprintf("%s:%s:%s", "binance", marketType, string(request.RequestType))
 }
 
-func (r *OrderRateLimiter) extractRedisKey(request BinanceRateLimiterRequest) string {
+func (r *OrderRateLimiter) extractRedisKey(request ratelimiter.ExchangeRateLimiterRequest) string {
 	marketType := ""
 	switch request.MarketType {
 	case types.MarketTypeSpot, types.MarketTypeMargin:
@@ -79,13 +79,13 @@ type IPRateLimiter struct {
 	weightAlgorithm *WeightAlgorithm
 }
 
-func NewIPRateLimiter(redisClient *redis.Client) ratelimiter.RateLimiter[BinanceRateLimiterRequest] {
+func NewIPRateLimiter(redisClient *redis.Client) ratelimiter.RateLimiter[ratelimiter.ExchangeRateLimiterRequest] {
 	return &IPRateLimiter{
 		weightAlgorithm: NewWeightAlgorithm(redisClient),
 	}
 }
 
-func (r *IPRateLimiter) Check(ctx context.Context, request BinanceRateLimiterRequest) (ratelimiter.RateLimitDecision, error) {
+func (r *IPRateLimiter) Check(ctx context.Context, request ratelimiter.ExchangeRateLimiterRequest) (ratelimiter.RateLimitDecision, error) {
 	rules, err := getRules(r.extractRuleKey(request))
 	if err != nil {
 		return ratelimiter.RateLimitDecision{
@@ -107,7 +107,7 @@ func (r *IPRateLimiter) Check(ctx context.Context, request BinanceRateLimiterReq
 	return decision, nil
 }
 
-func (r *IPRateLimiter) extractRuleKey(request BinanceRateLimiterRequest) string {
+func (r *IPRateLimiter) extractRuleKey(request ratelimiter.ExchangeRateLimiterRequest) string {
 
 	marketType := ""
 	switch request.MarketType {
@@ -124,7 +124,7 @@ func (r *IPRateLimiter) extractRuleKey(request BinanceRateLimiterRequest) string
 	return fmt.Sprintf("binance:%s:request", marketType)
 }
 
-func (r *IPRateLimiter) extractRedisKey(request BinanceRateLimiterRequest) string {
+func (r *IPRateLimiter) extractRedisKey(request ratelimiter.ExchangeRateLimiterRequest) string {
 	ip := request.IP
 	if ip == "" {
 		_ip := os.Getenv("HOST_IP")
@@ -150,7 +150,7 @@ func (r *IPRateLimiter) extractRedisKey(request BinanceRateLimiterRequest) strin
 	return fmt.Sprintf("binance:%s:request:%s", marketType, ip)
 }
 
-func (r *IPRateLimiter) extractWeightKey(request BinanceRateLimiterRequest) string {
+func (r *IPRateLimiter) extractWeightKey(request ratelimiter.ExchangeRateLimiterRequest) string {
 	marketType := ""
 	switch request.MarketType {
 	case types.MarketTypeSpot, types.MarketTypeMargin:
