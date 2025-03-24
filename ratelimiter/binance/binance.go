@@ -8,8 +8,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// ============================ RateLimiterManager ============================
-
 type BinanceRateLimiterManager struct {
 	redisClient *redis.Client
 }
