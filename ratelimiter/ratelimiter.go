@@ -57,6 +57,13 @@ type RateLimiter[T any] interface {
 	Check(ctx context.Context, request T) (RateLimitDecision, error)
 }
 
+// KeyExtractor 接口用于从请求类型 T 中提取关键信息（键）用于限流算法的判定。
+// K 是键的类型（如字符串、元组或自定义可比较类型）。
+// 对于交易所请求，可以将 (Exchange, RequestType, IP, UserID, Endpoint) 等字段拼接成键或键组。
+type KeyExtractor[T any, K comparable] interface {
+	ExtractKeys(request T) []K
+}
+
 // RateLimitManager 是对上层业务的统一抽象接口，
 // 外部系统只需调用它即可完成对请求的限流检查和记录，而内部的逻辑由 RateLimiterProvider、RateLimiter 等组成。
 type RateLimitManager[T any] interface {
