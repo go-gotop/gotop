@@ -101,6 +101,18 @@ type OrderResultEvent struct {
 	AvgPrice decimal.Decimal
 }
 
+// FundAllocationEvent 资金分配事件
+type FundAllocationEvent struct {
+	// TransactionID 交易ID
+	TransactionID string
+	// AccountID 账户ID
+	AccountID string
+	// FundAmount 资金数量
+	FundAmount decimal.Decimal
+	// FundAsset 资金资产
+	FundAsset string
+}
+
 // FrameErrorEvent 帧错误事件
 type FrameErrorEvent struct {
 	// Error 错误信息
