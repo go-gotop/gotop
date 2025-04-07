@@ -20,11 +20,6 @@ func NewBinanceRateLimiterManager(
 	}
 }
 
-// GetRedisClient 返回Redis客户端，用于测试
-func (m *BinanceRateLimiterManager) GetRedisClient() *redis.Client {
-	return m.redisClient
-}
-
 func (m *BinanceRateLimiterManager) PreCheck(ctx context.Context, request ratelimiter.ExchangeRateLimiterRequest) (ratelimiter.RateLimitDecision, error) {
 	rateLimiters := make([]ratelimiter.RateLimiter[ratelimiter.ExchangeRateLimiterRequest], 0)
 

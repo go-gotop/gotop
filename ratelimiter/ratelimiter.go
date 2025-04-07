@@ -59,7 +59,7 @@ type RateLimiter[T any] interface {
 
 // RateLimitManager 是对上层业务的统一抽象接口，
 // 外部系统只需调用它即可完成对请求的限流检查和记录，而内部的逻辑由 RateLimiterProvider、RateLimiter 等组成。
-type RateLimitManager[T any] interface {
+type RateLimitManager interface {
 	// PreCheck 在请求发送前进行检查，返回是否允许发送
-	PreCheck(ctx context.Context, request T) (RateLimitDecision, error)
+	PreCheck(ctx context.Context, request ExchangeRateLimiterRequest) (RateLimitDecision, error)
 }
