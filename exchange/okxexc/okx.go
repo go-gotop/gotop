@@ -175,3 +175,10 @@ type okxBalanceResponse struct {
 	} `json:"data"`
 	Msg string `json:"msg"`
 }
+
+// okx k线响应
+type okxKlineResponse struct {
+	Code string     `json:"code"`
+	Data [][]string `json:"data"`
+	Msg  string     `json:"msg"`
+}

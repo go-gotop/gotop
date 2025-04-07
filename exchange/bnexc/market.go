@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/go-gotop/gotop/exchange"
 	"github.com/go-gotop/gotop/requests"
@@ -114,8 +116,162 @@ func (b *BnMarketData) GetDepth(ctx context.Context, req *exchange.GetDepthReque
 	return result, nil
 }
 
+func (b *BnMarketData) GetKline(ctx context.Context, req *exchange.GetKlineRequest) (*exchange.GetKlineResponse, error) {
+	var apiUrl string
+
+	if req.MarketType == types.MarketTypeSpot || req.MarketType == types.MarketTypeMargin {
+		apiUrl = BNEX_API_SPOT_URL + "/api/v3/klines"
+	} else if req.MarketType == types.MarketTypeFuturesUSDMargined || req.MarketType == types.MarketTypePerpetualUSDMargined {
+		apiUrl = BNEX_API_FUTURES_USD_URL + "/fapi/v1/klines"
+	} else if req.MarketType == types.MarketTypeFuturesCoinMargined || req.MarketType == types.MarketTypePerpetualCoinMargined {
+		apiUrl = BNEX_API_FUTURES_COIN_URL + "/dapi/v1/klines"
+	}
+
+	params := map[string]any{
+		"symbol":   req.Symbol,
+		"interval": req.Period,
+	}
+
+	if req.Start != 0 {
+		params["start"] = fmt.Sprintf("%d", req.Start)
+	}
+
+	if req.End != 0 {
+		params["end"] = fmt.Sprintf("%d", req.End)
+	}
+
+	if req.Limit != 0 {
+		params["limit"] = fmt.Sprintf("%d", req.Limit)
+	}
+
+	resp, err := b.client.DoRequest(&requests.Request{
+		Method: http.MethodGet,
+		URL:    apiUrl,
+		Params: params,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var klines [][]interface{}
+	err = json.Unmarshal(body, &klines)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &exchange.GetKlineResponse{
+		Klines: make([]exchange.Kline, 0, len(klines)),
+	}
+
+	for _, kline := range klines {
+		if len(kline) >= 8 {
+			openTime := int64(kline[0].(float64))
+			closeTime := int64(kline[6].(float64))
+			open, err := decimal.NewFromString(kline[1].(string))
+			if err != nil {
+				return nil, err
+			}
+			high, err := decimal.NewFromString(kline[2].(string))
+			if err != nil {
+				return nil, err
+			}
+			low, err := decimal.NewFromString(kline[3].(string))
+			if err != nil {
+				return nil, err
+			}
+			close, err := decimal.NewFromString(kline[4].(string))
+			if err != nil {
+				return nil, err
+			}
+			volume, err := decimal.NewFromString(kline[5].(string))
+			if err != nil {
+				return nil, err
+			}
+			quoteVolume, err := decimal.NewFromString(kline[7].(string))
+			if err != nil {
+				return nil, err
+			}
+
+			result.Klines = append(result.Klines, exchange.Kline{
+				Symbol:      req.Symbol,
+				Open:        open,
+				High:        high,
+				Low:         low,
+				Close:       close,
+				Volume:      volume,
+				QuoteVolume: quoteVolume,
+				OpenTime:    openTime,
+				CloseTime:   closeTime,
+				Confirm:     1, // 默认设置为已确认
+			})
+		}
+	}
+
+	// 判断最后一条K线是否完结
+	if len(result.Klines) > 0 {
+		lastKline := result.Klines[len(result.Klines)-1]
+		isComplete := isKlineComplete(lastKline.OpenTime, req.Period)
+		result.IsLastComplete = isComplete
+
+		// 如果K线未完结，设置Confirm为0
+		if !isComplete {
+			result.Klines[len(result.Klines)-1].Confirm = 0
+		}
+	}
+
+	return result, nil
+}
+
 func (b *BnMarketData) GetMarkPriceKline(ctx context.Context, req *exchange.GetMarkPriceKlineRequest) (*exchange.GetMarkPriceKlineResponse, error) {
 	return nil, nil
+}
+
+// 判断K线是否完结，通过比较开盘时间、收盘时间和周期
+func isKlineComplete(openTime int64, period string) bool {
+	var periodMillis int64
+
+	// 解析周期字符串，转换为毫秒
+	if len(period) >= 2 {
+		unit := period[len(period)-1:]
+		value, err := strconv.ParseInt(period[:len(period)-1], 10, 64)
+		if err != nil {
+			return false
+		}
+
+		switch unit {
+		case "m":
+			periodMillis = value * 60 * 1000
+		case "h":
+			periodMillis = value * 60 * 60 * 1000
+		case "d":
+			periodMillis = value * 24 * 60 * 60 * 1000
+		case "w":
+			periodMillis = value * 7 * 24 * 60 * 60 * 1000
+		case "M":
+			// 简化处理，月周期不支持，因为天数不固定
+			return false
+		default:
+			return false
+		}
+	} else {
+		return false
+	}
+
+	// 计算预期的收盘时间
+	expectedCloseTime := openTime + periodMillis
+
+	// 当前时间
+	currentTime := time.Now().UnixMilli()
+
+	// 如果当前时间超过了预期收盘时间，则认为K线已完结
+	return currentTime >= expectedCloseTime
 }
 
 func ConvertCoinToContract(ctx context.Context, req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {

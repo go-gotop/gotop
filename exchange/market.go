@@ -18,6 +18,14 @@ type MarketDataProvider interface {
 	//   error: 如果请求过程中发生错误，返回错误信息。
 	GetDepth(ctx context.Context, req *GetDepthRequest) (*GetDepthResponse, error)
 
+	// GetKline 获取指定交易对的K线数据。
+	// 参数：
+	//   ctx: 上下文，用于控制请求超时、取消等。
+	//   req: 请求参数对象，包含交易对(symbol)、时间间隔(interval)、起止时间等信息。
+	// 返回值：
+	//   *GetKlineResponse: 包含K线数据点的列表。
+	//   error: 请求失败时返回错误信息。
+	GetKline(ctx context.Context, req *GetKlineRequest) (*GetKlineResponse, error)
 	// GetMarkPriceKline 获取指定交易对的标记价格K线数据。
 	// 一些合约交易所提供标记价格（Mark Price），该价格用于计算强平和资金费率。
 	// 参数：
@@ -73,6 +81,28 @@ type DepthItem struct {
 	Amount decimal.Decimal
 }
 
+type GetKlineRequest struct {
+	// Symbol 交易对
+	Symbol string
+	// Start 开始时间
+	Start int64
+	// End 结束时间
+	End int64
+	// Period 时间间隔
+	Period string
+	// Limit 限制返回的K线数量
+	Limit int
+	// MarketType 市场类型
+	MarketType types.MarketType
+}
+
+type GetKlineResponse struct {
+	// Klines 包含K线数据点的列表
+	Klines []Kline
+	// IsLastComplete 最后一条K线是否完结
+	IsLastComplete bool
+}
+
 type GetMarkPriceKlineRequest struct {
 }
 
@@ -80,4 +110,24 @@ type GetMarkPriceKlineResponse struct {
 }
 
 type Kline struct {
+	// Symbol 交易对
+	Symbol string
+	// Open 开盘价
+	Open decimal.Decimal
+	// High 最高价
+	High decimal.Decimal
+	// Low 最低价
+	Low decimal.Decimal
+	// Close 收盘价
+	Close decimal.Decimal
+	// Volume 成交量
+	Volume decimal.Decimal
+	// QuoteVolume 成交额
+	QuoteVolume decimal.Decimal
+	// OpenTime 开盘时间
+	OpenTime int64
+	// CloseTime 收盘时间
+	CloseTime int64
+	// Confirm 完结标记 0: 未确认 1: 确认
+	Confirm int
 }

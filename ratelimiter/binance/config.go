@@ -1,27 +1,32 @@
 package binance
 
-import "time"
+import (
+	"time"
 
-// LimitRule 定义了限流规则
-type LimitRule struct {
-	// 时间窗口大小
-	Window time.Duration
-	// 窗口内允许的最大请求数	
-	Threshold int
-}
+	"github.com/go-gotop/gotop/ratelimiter"
+)
 
 // BinanceRateLimitConfig 定义了Binance的限流配置
 type BinanceRateLimitConfig struct {
-    Rules map[string]LimitRule // key前缀 -> 规则
+	Rules  map[string]ratelimiter.RateLimitRule // key前缀 -> 规则
+	Weight map[string]int                       // key前缀 -> 权重
 }
 
 // DefaultBinanceConfig 返回Binance特定的限流配置（实际可从配置文件、环境变量中加载）
 func DefaultBinanceConfig() BinanceRateLimitConfig {
-    return BinanceRateLimitConfig{
-        Rules: map[string]LimitRule{
-            BinanceFuturesOrder10sKey: {Window: 10 * time.Second, Threshold: 300},
-            BinanceFuturesOrder1mKey:  {Window: time.Minute, Threshold: 1200},
-        },
-    }
+	return BinanceRateLimitConfig{
+		Rules: map[string]ratelimiter.RateLimitRule{
+			BinanceFuturesCreateOrder10sKey: {Window: 10 * time.Second, Threshold: 300},
+			BinanceFuturesCreateOrder1mKey:  {Window: time.Minute, Threshold: 1200},
+			BinanceSpotCreateOrder10sKey:    {Window: 10 * time.Second, Threshold: 100},
+			BinanceSpotRequest1mKey:         {Window: time.Minute, Threshold: 6000},
+			BinanceFuturesRequest1mKey:      {Window: time.Minute, Threshold: 2400},
+		},
+		Weight: map[string]int{
+			BinanceFuturesCreateOrderWeightKey: 0,
+			BinanceSpotCreateOrderWeightKey:    1,
+			BinanceSpotRequestWeightKey:        1,
+			BinanceFuturesRequestWeightKey:     1,
+		},
+	}
 }
-
