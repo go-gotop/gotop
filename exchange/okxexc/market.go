@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sort"
+	"strconv"
 
 	"github.com/go-gotop/gotop/exchange"
 	"github.com/go-gotop/gotop/requests"
@@ -109,6 +111,123 @@ func (o *OkxMarketData) GetDepth(ctx context.Context, req *exchange.GetDepthRequ
 			result.Depth.Bids = append(result.Depth.Bids, item)
 		}
 	}
+
+	return result, nil
+}
+
+func (o *OkxMarketData) GetKline(ctx context.Context, req *exchange.GetKlineRequest) (*exchange.GetKlineResponse, error) {
+	apiUrl := OKX_API_BASE_URL + "/api/v5/market/candles"
+
+	params := map[string]any{
+		"instId": req.Symbol,
+		"bar":    req.Period,
+	}
+
+	if req.Start > 0 {
+		params["before"] = fmt.Sprintf("%d", req.Start)
+	}
+
+	if req.End > 0 {
+		params["after"] = fmt.Sprintf("%d", req.End)
+	}
+
+	if req.Limit > 0 {
+		params["limit"] = fmt.Sprintf("%d", req.Limit)
+	}
+
+	resp, err := o.client.DoRequest(&requests.Request{
+		Method: http.MethodGet,
+		URL:    apiUrl,
+		Params: params,
+	})
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var response okxKlineResponse
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	if response.Code != "0" {
+		return nil, fmt.Errorf("operation failed, code: %s, message: %s", response.Code, response.Msg)
+	}
+
+	if len(response.Data) == 0 {
+		return nil, fmt.Errorf("no data")
+	}
+
+	klines := response.Data
+
+	result := &exchange.GetKlineResponse{
+		Klines: make([]exchange.Kline, 0, len(klines)),
+	}
+
+	for _, kline := range klines {
+		if len(kline) >= 7 {
+			open, err := decimal.NewFromString(kline[1])
+			if err != nil {
+				return nil, err
+			}
+			high, err := decimal.NewFromString(kline[2])
+			if err != nil {
+				return nil, err
+			}
+			low, err := decimal.NewFromString(kline[3])
+			if err != nil {
+				return nil, err
+			}
+			close, err := decimal.NewFromString(kline[4])
+			if err != nil {
+				return nil, err
+			}
+			volume, err := decimal.NewFromString(kline[5])
+			if err != nil {
+				return nil, err
+			}
+			if req.MarketType == types.MarketTypeFuturesUSDMargined || req.MarketType == types.MarketTypePerpetualUSDMargined {
+				volume, err = decimal.NewFromString(kline[6])
+				if err != nil {
+					return nil, err
+				}
+			}
+			quoteVolume, err := decimal.NewFromString(kline[7])
+			if err != nil {
+				return nil, err
+			}
+			openTime, err := strconv.ParseInt(kline[0], 10, 64)
+			if err != nil {
+				return nil, err
+			}
+			confirm, err := strconv.ParseInt(kline[8], 10, 64)
+			if err != nil {
+				return nil, err
+			}
+			result.Klines = append(result.Klines, exchange.Kline{
+				Symbol:      req.Symbol,
+				Open:        open,
+				High:        high,
+				Low:         low,
+				Close:       close,
+				Volume:      volume,
+				QuoteVolume: quoteVolume,
+				OpenTime:    openTime,
+				Confirm:     int(confirm),
+			})
+		}
+	}
+
+	// 正序
+	sort.Slice(result.Klines, func(i, j int) bool {
+		return result.Klines[i].OpenTime < result.Klines[j].OpenTime
+	})
 
 	return result, nil
 }
