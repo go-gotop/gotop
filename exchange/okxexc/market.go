@@ -237,7 +237,7 @@ func (o *OkxMarketData) GetMarkPriceKline(ctx context.Context, req *exchange.Get
 	return nil, fmt.Errorf("方法未实现")
 }
 
-func ConvertCoinToContract(ctx context.Context, req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
+func ConvertCoinToContract(req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
 	if req.CtVal.IsZero() {
 		return decimal.Zero, fmt.Errorf("ctVal is required")
 	}
@@ -258,7 +258,7 @@ func ConvertCoinToContract(ctx context.Context, req *exchange.ConvertSizeUnitReq
 	}
 }
 
-func ConvertContractToCoin(ctx context.Context, req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
+func ConvertContractToCoin(req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
 	if req.CtVal.IsZero() {
 		return decimal.Zero, fmt.Errorf("ctVal is required")
 	}
@@ -283,7 +283,7 @@ func ConvertContractToCoin(ctx context.Context, req *exchange.ConvertSizeUnitReq
 	}
 }
 
-func ConvertQuoteToContract(ctx context.Context, req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
+func ConvertQuoteToContract(req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
 	if req.CtVal.IsZero() {
 		return decimal.Zero, fmt.Errorf("ctVal is required")
 	}
@@ -307,7 +307,7 @@ func ConvertQuoteToContract(ctx context.Context, req *exchange.ConvertSizeUnitRe
 	}
 }
 
-func ConvertContractToQuote(ctx context.Context, req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
+func ConvertContractToQuote(req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
 	if req.CtVal.IsZero() {
 		return decimal.Zero, fmt.Errorf("ctVal is required")
 	}

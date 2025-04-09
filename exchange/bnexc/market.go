@@ -274,7 +274,7 @@ func isKlineComplete(openTime int64, period string) bool {
 	return currentTime >= expectedCloseTime
 }
 
-func ConvertCoinToContract(ctx context.Context, req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
+func ConvertCoinToContract(req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
 	if req.MarketType != types.MarketTypeFuturesCoinMargined && req.MarketType != types.MarketTypePerpetualCoinMargined {
 		return decimal.Zero, fmt.Errorf("invalid market type: %s", req.MarketType)
 	}
@@ -296,7 +296,7 @@ func ConvertCoinToContract(ctx context.Context, req *exchange.ConvertSizeUnitReq
 	return size, nil
 }
 
-func ConvertContractToCoin(ctx context.Context, req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
+func ConvertContractToCoin(req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
 	if req.MarketType != types.MarketTypeFuturesCoinMargined && req.MarketType != types.MarketTypePerpetualCoinMargined {
 		return decimal.Zero, fmt.Errorf("invalid market type: %s", req.MarketType)
 	}
@@ -318,7 +318,7 @@ func ConvertContractToCoin(ctx context.Context, req *exchange.ConvertSizeUnitReq
 	return size, nil
 }
 
-func ConvertQuoteToContract(ctx context.Context, req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
+func ConvertQuoteToContract(req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
 	if req.MarketType != types.MarketTypeFuturesUSDMargined && req.MarketType != types.MarketTypePerpetualUSDMargined {
 		return decimal.Zero, fmt.Errorf("invalid market type: %s", req.MarketType)
 	}
@@ -335,7 +335,7 @@ func ConvertQuoteToContract(ctx context.Context, req *exchange.ConvertSizeUnitRe
 	return size, nil
 }
 
-func ConvertContractToQuote(ctx context.Context, req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
+func ConvertContractToQuote(req *exchange.ConvertSizeUnitRequest) (decimal.Decimal, error) {
 	if req.MarketType != types.MarketTypeFuturesUSDMargined && req.MarketType != types.MarketTypePerpetualUSDMargined {
 		return decimal.Zero, fmt.Errorf("invalid market type: %s", req.MarketType)
 	}
