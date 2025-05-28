@@ -2,159 +2,98 @@ package binance
 
 import (
 	"context"
-	"fmt"
-	"os"
 	"strings"
 
 	"github.com/go-gotop/gotop/ratelimiter"
 	extractkey "github.com/go-gotop/gotop/ratelimiter/binance/extractKey"
-	"github.com/go-gotop/gotop/types"
 	"github.com/redis/go-redis/v9"
 )
 
-// ============================ OrderRateLimiter 下单限流器 ============================
+// ============================ GeneralRateLimiter 通用限流器 ============================
 type GeneralRateLimiter struct {
-	extractRuleKey   *extractkey.RuleKey
-	extractWeightKey *extractkey.WeightKey
-	extractRedisKey  *extractkey.RedisKey
-	timesAlgorithm   *TimesAlgorithm
+	extractTimesRuleKey   *extractkey.TimesRuleKey
+	extractWeightRuleKey  *extractkey.WeightRuleKey
+	extractTimesRedisKey  *extractkey.TimesRedisKey
+	extractWeightRedisKey *extractkey.WeightRedisKey
+	timesAlgorithm        *ratelimiter.TimesAlgorithm
+	weightAlgorithm       *ratelimiter.WeightAlgorithm
 }
 
 func NewGeneralRateLimiter(redisClient *redis.Client) ratelimiter.RateLimiter[ratelimiter.ExchangeRateLimiterRequest] {
 	return &GeneralRateLimiter{
-		extractRuleKey:   &extractkey.RuleKey{},
-		extractWeightKey: &extractkey.WeightKey{},
-		extractRedisKey:  &extractkey.RedisKey{},
-		timesAlgorithm:   NewTimesAlgorithm(redisClient),
+		extractTimesRuleKey:   &extractkey.TimesRuleKey{},
+		extractWeightRuleKey:  &extractkey.WeightRuleKey{},
+		extractTimesRedisKey:  &extractkey.TimesRedisKey{},
+		extractWeightRedisKey: &extractkey.WeightRedisKey{},
+		timesAlgorithm:        ratelimiter.NewTimesAlgorithm(redisClient),
+		weightAlgorithm:       ratelimiter.NewWeightAlgorithm(redisClient),
 	}
 }
 
 func (r *GeneralRateLimiter) Check(ctx context.Context, request ratelimiter.ExchangeRateLimiterRequest) (ratelimiter.RateLimitDecision, error) {
-	// 提取规则键
-	ruleKeys := r.extractRuleKey.ExtractKeys(request)
-	weightKeys := r.extractWeightKey.ExtractKeys(request)
-	redisKeys := r.extractRedisKey.ExtractKeys(request)
+	// 1. 提取次数规则键
+	timesRuleKey := r.extractTimesRuleKey.ExtractKeys(request)
+	// 2. 提取权重规则键
+	weightRuleKey := r.extractWeightRuleKey.ExtractKeys(request)
+	// 3. 提取次数redis key
+	timesRedisKey := r.extractTimesRedisKey.ExtractKeys(request)
+	// 4. 提取权重redis key
+	weightRedisKey := r.extractWeightRedisKey.ExtractKeys(request)
+	// 5. 提取权重键
+	weightKey := r.extractWeightRuleKey.ExtractKeys(request)
 
 	// 匹配规则
-	matchRules := []ratelimiter.RateLimitRule{}
+	matchTimesRules := []ratelimiter.RateLimitRule{}
+	matchWeightRules := []ratelimiter.RateLimitRule{}
 
-	for _, key := range ruleKeys {
-		timesRules, err := getRules(key, DefaultBinanceConfig().TimesRules)
-		weightRules, err := getRules(key, DefaultBinanceConfig().WeightRules)
+	if timesRuleKey != "" {
+		timesRules, err := getRules(timesRuleKey, DefaultBinanceConfig().TimesRules)
+		if err == nil && len(timesRules) > 0 {
+			matchTimesRules = timesRules
+		}
+	}
+
+	if weightRuleKey != "" {
+		weightRules, err := getRules(weightRuleKey, DefaultBinanceConfig().WeightRules)
+		if err == nil && len(weightRules) > 0 {
+			matchWeightRules = weightRules
+		}
+	}
+
+	weight := 0
+	if weightKey != "" {
+		weight = DefaultBinanceConfig().Weight[weightKey]
+	}
+
+	if timesRedisKey != "" && len(matchTimesRules) > 0 {
+		decision, err := r.timesAlgorithm.Check(timesRedisKey, matchTimesRules)
 		if err != nil {
 			return ratelimiter.RateLimitDecision{
 				Allowed: false,
 				Reason:  err.Error(),
 			}, err
 		}
-		matchRules = append(matchRules, timesRules...)
-		matchRules = append(matchRules, weightRules...)
-	}
-
-	weight
-	// 获取redis key
-	redisKey := r.extractRedisKey(request)
-
-	decision, err := r.timesAlgorithm.Check(redisKey, rules)
-	if err != nil {
-		return ratelimiter.RateLimitDecision{
-			Allowed: false,
-			Reason:  err.Error(),
-		}, err
-	}
-	return decision, nil
-}
-
-// ============================ IPRateLimiter 权重限流器(权重粒度只到IP) ============================
-type IPRateLimiter struct {
-	weightAlgorithm *WeightAlgorithm
-}
-
-func NewIPRateLimiter(redisClient *redis.Client) ratelimiter.RateLimiter[ratelimiter.ExchangeRateLimiterRequest] {
-	return &IPRateLimiter{
-		weightAlgorithm: NewWeightAlgorithm(redisClient),
-	}
-}
-
-func (r *IPRateLimiter) Check(ctx context.Context, request ratelimiter.ExchangeRateLimiterRequest) (ratelimiter.RateLimitDecision, error) {
-	rules, err := getRules(r.extractRuleKey(request))
-	if err != nil {
-		return ratelimiter.RateLimitDecision{
-			Allowed: false,
-			Reason:  err.Error(),
-		}, err
-	}
-
-	redisKey := r.extractRedisKey(request)
-	weightKey := r.extractWeightKey(request)
-	weight := DefaultBinanceConfig().Weight[weightKey]
-	decision, err := r.weightAlgorithm.Check(redisKey, weight, rules)
-	if err != nil {
-		return ratelimiter.RateLimitDecision{
-			Allowed: false,
-			Reason:  err.Error(),
-		}, err
-	}
-	return decision, nil
-}
-
-func (r *IPRateLimiter) extractRuleKey(request ratelimiter.ExchangeRateLimiterRequest) string {
-
-	marketType := ""
-	switch request.MarketType {
-	case types.MarketTypeSpot, types.MarketTypeMargin:
-		marketType = "spot"
-	case types.MarketTypeFuturesUSDMargined,
-		types.MarketTypeFuturesCoinMargined,
-		types.MarketTypePerpetualUSDMargined,
-		types.MarketTypePerpetualCoinMargined:
-		marketType = "futures"
-	default:
-		return ""
-	}
-	return fmt.Sprintf("binance:%s:request", marketType)
-}
-
-func (r *IPRateLimiter) extractRedisKey(request ratelimiter.ExchangeRateLimiterRequest) string {
-	ip := request.IP
-	if ip == "" {
-		_ip := os.Getenv("HOST_IP")
-		if _ip == "" {
-			_ip = "unknown"
+		if !decision.Allowed {
+			return decision, nil
 		}
-		ip = _ip
 	}
 
-	marketType := ""
-	switch request.MarketType {
-	case types.MarketTypeSpot, types.MarketTypeMargin:
-		marketType = "spot"
-	case types.MarketTypeFuturesUSDMargined,
-		types.MarketTypeFuturesCoinMargined,
-		types.MarketTypePerpetualUSDMargined,
-		types.MarketTypePerpetualCoinMargined:
-		marketType = "futures"
-	default:
-		return ""
+	if weightRedisKey != "" && len(matchWeightRules) > 0 {
+		decision, err := r.weightAlgorithm.Check(weightRedisKey, weight, matchWeightRules)
+		if err != nil {
+			return ratelimiter.RateLimitDecision{
+				Allowed: false,
+				Reason:  err.Error(),
+			}, err
+		}
+		if !decision.Allowed {
+			return decision, nil
+		}
 	}
 
-	return fmt.Sprintf("binance:%s:request:%s", marketType, ip)
-}
-
-func (r *IPRateLimiter) extractWeightKey(request ratelimiter.ExchangeRateLimiterRequest) string {
-	marketType := ""
-	switch request.MarketType {
-	case types.MarketTypeSpot, types.MarketTypeMargin:
-		marketType = "spot"
-	case types.MarketTypeFuturesUSDMargined,
-		types.MarketTypeFuturesCoinMargined,
-		types.MarketTypePerpetualUSDMargined,
-		types.MarketTypePerpetualCoinMargined:
-		marketType = "futures"
-	default:
-		return ""
-	}
-	return fmt.Sprintf("binance:%s:%s:weight", marketType, request.RequestType)
+	return ratelimiter.RateLimitDecision{
+		Allowed: true,
+	}, nil
 }
 
 func getRules(key string, defaultRules map[string]ratelimiter.RateLimitRule) ([]ratelimiter.RateLimitRule, error) {

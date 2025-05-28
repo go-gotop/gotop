@@ -8,6 +8,9 @@ const (
 	BinanceFuturesCreateOrder1mKey = "binance:futures:createorder:1m"
 	// BinanceSpotCreateOrder10sKey 现货每10s不超过100次下单请求
 	BinanceSpotCreateOrder10sKey = "binance:spot:createorder:10s"
+	// ============ Websocket连接限制规则Key ================================
+	// BinanceWsConnect10sKey 每5分钟不超过300次连接请求
+	BinanceWsConnect5mKey = "binance:spot:wsconnect:5m"
 
 	// ============ 权重限制规则Key ================================
 	// BinanceSpotRequest1mKey 现货每分钟不超过6000权重请求
@@ -20,4 +23,5 @@ const (
 	BinanceSpotCreateOrderWeightKey    = "binance:spot:createorder:weight"
 	BinanceSpotRequestWeightKey        = "binance:spot:request:weight"
 	BinanceFuturesRequestWeightKey     = "binance:futures:request:weight"
+	BinanceFuturesWsConnectWeightKey   = "binance:futures:wsconnect:weight"
 )

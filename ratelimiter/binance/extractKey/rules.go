@@ -7,19 +7,16 @@ import (
 	"github.com/go-gotop/gotop/types"
 )
 
-type RuleKey struct {
+type TimesRuleKey struct {
 }
 
-func (r *RuleKey) ExtractKeys(request ratelimiter.ExchangeRateLimiterRequest) []string {
-	keys := make([]string, 0)
-	keys = append(keys, r.extractOrderRule(request))
-	keys = append(keys, r.extractWeightRule(request))
-	return keys
+func (r *TimesRuleKey) ExtractKeys(request ratelimiter.ExchangeRateLimiterRequest) string {
+	return r.extractTimesRule(request)
 }
 
 // extractOrderRule 提取下单限流算法规则的键
 // key = binance:{marketType}:{requestType}
-func (r *RuleKey) extractOrderRule(request ratelimiter.ExchangeRateLimiterRequest) string {
+func (r *TimesRuleKey) extractTimesRule(request ratelimiter.ExchangeRateLimiterRequest) string {
 	marketType := ""
 	switch request.MarketType {
 	case types.MarketTypeSpot, types.MarketTypeMargin:
@@ -33,9 +30,16 @@ func (r *RuleKey) extractOrderRule(request ratelimiter.ExchangeRateLimiterReques
 	return fmt.Sprintf("binance:%s:%s", marketType, request.RequestType)
 }
 
+type WeightRuleKey struct {
+}
+
+func (r *WeightRuleKey) ExtractKeys(request ratelimiter.ExchangeRateLimiterRequest) string {
+	return r.extractWeightRule(request)
+}
+
 // extractWeightRule 提取权重限流算法规则的键
 // key = binance:{marketType}:request
-func (r *RuleKey) extractWeightRule(request ratelimiter.ExchangeRateLimiterRequest) string {
+func (r *WeightRuleKey) extractWeightRule(request ratelimiter.ExchangeRateLimiterRequest) string {
 	marketType := ""
 	switch request.MarketType {
 	case types.MarketTypeSpot, types.MarketTypeMargin:

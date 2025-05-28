@@ -10,10 +10,8 @@ import (
 type WeightKey struct {
 }
 
-func (w *WeightKey) ExtractKeys(request ratelimiter.ExchangeRateLimiterRequest) []string {
-	keys := make([]string, 0)
-	keys = append(keys, w.extractWeightKey(request))
-	return keys
+func (w *WeightKey) ExtractKeys(request ratelimiter.ExchangeRateLimiterRequest) string {
+	return w.extractWeightKey(request)
 }
 
 // extractWeightKey 提取权重限流算法规则的键

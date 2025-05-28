@@ -1,4 +1,4 @@
-package binance
+package ratelimiter
 
 import (
 	"context"
@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-gotop/gotop/ratelimiter"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -27,8 +26,8 @@ func NewTimesAlgorithm(
 
 func (r *TimesAlgorithm) Check(
 	key string,
-	rules []ratelimiter.RateLimitRule,
-) (ratelimiter.RateLimitDecision, error) {
+	rules []RateLimitRule,
+) (RateLimitDecision, error) {
 	ctx := context.Background()
 	now := time.Now().Unix()
 
@@ -47,7 +46,7 @@ func (r *TimesAlgorithm) Check(
 		if debugMode {
 			fmt.Println("没有找到匹配的规则，默认允许请求")
 		}
-		return ratelimiter.RateLimitDecision{
+		return RateLimitDecision{
 			Allowed: true,
 			Reason:  "no rules found",
 		}, nil
@@ -117,7 +116,7 @@ func (r *TimesAlgorithm) Check(
 		if debugMode {
 			fmt.Printf("Redis错误: %v\n", err)
 		}
-		return ratelimiter.RateLimitDecision{
+		return RateLimitDecision{
 			Allowed: false,
 			Reason:  fmt.Sprintf("redis error: %v", err),
 		}, err
@@ -136,7 +135,7 @@ func (r *TimesAlgorithm) Check(
 			fmt.Printf("决策结果: allowed=%v, reason=%s\n", allowed, reason)
 		}
 
-		return ratelimiter.RateLimitDecision{
+		return RateLimitDecision{
 			Allowed: allowed,
 			Reason:  reason,
 		}, nil
@@ -147,7 +146,7 @@ func (r *TimesAlgorithm) Check(
 		fmt.Println("无法解析结果，返回默认允许决策")
 	}
 
-	return ratelimiter.RateLimitDecision{
+	return RateLimitDecision{
 		Allowed: true,
 	}, nil
 }

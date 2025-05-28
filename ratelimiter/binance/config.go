@@ -20,6 +20,7 @@ func DefaultBinanceConfig() BinanceRateLimitConfig {
 			BinanceFuturesCreateOrder10sKey: {Window: 10 * time.Second, Threshold: 300},
 			BinanceFuturesCreateOrder1mKey:  {Window: time.Minute, Threshold: 1200},
 			BinanceSpotCreateOrder10sKey:    {Window: 10 * time.Second, Threshold: 100},
+			BinanceWsConnect5mKey:           {Window: 5 * time.Minute, Threshold: 300},
 		},
 		WeightRules: map[string]ratelimiter.RateLimitRule{
 			BinanceSpotRequest1mKey:    {Window: time.Minute, Threshold: 6000},
@@ -30,6 +31,7 @@ func DefaultBinanceConfig() BinanceRateLimitConfig {
 			BinanceSpotCreateOrderWeightKey:    1,
 			BinanceSpotRequestWeightKey:        1,
 			BinanceFuturesRequestWeightKey:     1,
+			BinanceFuturesWsConnectWeightKey:   5,
 		},
 	}
 }

@@ -13,8 +13,12 @@ type RequestType string
 const (
 	// RequestTypeOrder 下订单请求
 	RequestTypeOrder RequestType = "createorder"
+	// RequestTypeCancelOrder 撤单请求
+	RequestTypeCancelOrder RequestType = "cancelorder"
 	// RequestTypeNormal 普通请求
 	RequestTypeNormal RequestType = "request"
+	// RequestWsConnect 连接请求
+	RequestWsConnect RequestType = "wsconnect"
 )
 
 // ExchangeRateLimiterRequest 表示交易所限流器请求的上下文
@@ -61,7 +65,7 @@ type RateLimiter[T any] interface {
 // K 是键的类型（如字符串、元组或自定义可比较类型）。
 // 对于交易所请求，可以将 (Exchange, RequestType, IP, UserID, Endpoint) 等字段拼接成键或键组。
 type KeyExtractor[T any, K comparable] interface {
-	ExtractKeys(request T) []K
+	ExtractKey(request T) K
 }
 
 // RateLimitManager 是对上层业务的统一抽象接口，

@@ -10,32 +10,25 @@ import (
 
 // ============================ RateLimiterManager ============================
 
-type BinanceRateLimiterManager struct {
+type binanceRateLimiterManager struct {
 	redisClient *redis.Client
 }
 
 func NewBinanceRateLimiterManager(
 	redisClient *redis.Client,
-) *BinanceRateLimiterManager {
-	return &BinanceRateLimiterManager{
+) ratelimiter.RateLimitManager[ratelimiter.ExchangeRateLimiterRequest] {
+	return &binanceRateLimiterManager{
 		redisClient: redisClient,
 	}
 }
 
-// GetRedisClient 返回Redis客户端，用于测试
-func (m *BinanceRateLimiterManager) GetRedisClient() *redis.Client {
-	return m.redisClient
-}
-
-func (m *BinanceRateLimiterManager) PreCheck(ctx context.Context, request ratelimiter.ExchangeRateLimiterRequest) (ratelimiter.RateLimitDecision, error) {
+func (m *binanceRateLimiterManager) PreCheck(ctx context.Context, request ratelimiter.ExchangeRateLimiterRequest) (ratelimiter.RateLimitDecision, error) {
 	rateLimiters := make([]ratelimiter.RateLimiter[ratelimiter.ExchangeRateLimiterRequest], 0)
 
 	switch request.RequestType {
-	case ratelimiter.RequestTypeOrder:
-		rateLimiters = append(rateLimiters, NewOrderRateLimiter(m.redisClient))
-		rateLimiters = append(rateLimiters, NewIPRateLimiter(m.redisClient))
-	case ratelimiter.RequestTypeNormal:
-		rateLimiters = append(rateLimiters, NewIPRateLimiter(m.redisClient))
+	case ratelimiter.RequestTypeOrder,
+		ratelimiter.RequestTypeNormal:
+		rateLimiters = append(rateLimiters, NewGeneralRateLimiter(m.redisClient))
 	default:
 		return ratelimiter.RateLimitDecision{
 			Allowed: false,
