@@ -41,6 +41,20 @@ type StrategySignalEvent struct {
 	CreatedBy string
 }
 
+// StrategyCancelOrderEvent 策略取消订单事件
+type StrategyCancelOrderEvent struct {
+	// TransactionID 交易ID
+	TransactionID string
+	// AccountID 账户ID
+	AccountID string
+	// ClientOrderID 自定义客户端订单号
+	ClientOrderID string
+	// Exchange 交易所
+	Exchange string
+	// TimeStamp 时间戳
+	TimeStamp int64
+}
+
 // OrderResultEvent 订单结果事件
 type OrderResultEvent struct {
 	// AccountID 账户ID
