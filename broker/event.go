@@ -51,6 +51,10 @@ type StrategyCancelOrderEvent struct {
 	ClientOrderID string
 	// Exchange 交易所
 	Exchange string
+	// Symbol 交易对
+	Symbol string
+	// MarketType 市场类型
+	MarketType types.MarketType
 	// TimeStamp 时间戳
 	TimeStamp int64
 }
