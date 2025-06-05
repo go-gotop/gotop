@@ -247,7 +247,7 @@ const (
 	OrderStateRejected
 )
 
-// OrderType 订单类型: 1-OrderTypeMarket, 2-OrderTypeLimit
+// OrderType 订单类型: 1-OrderTypeMarket, 2-OrderTypeLimit, 3-OrderTypeLimitMaker
 type OrderType int
 
 // String 返回字符串表示
@@ -257,6 +257,8 @@ func (o OrderType) String() string {
 		return "MARKET"
 	case OrderTypeLimit:
 		return "LIMIT"
+	case OrderTypeLimitMaker:
+		return "LIMIT_MAKER"
 	}
 	return "UNKNOWN"
 }
@@ -265,7 +267,8 @@ func (o OrderType) String() string {
 func (o OrderType) IsValid() bool {
 	switch o {
 	case OrderTypeMarket,
-		OrderTypeLimit:
+		OrderTypeLimit,
+		OrderTypeLimitMaker:
 		return true
 	default:
 		return false
@@ -280,6 +283,8 @@ func ParseOrderType(s string) (OrderType, error) {
 		return OrderTypeMarket, nil
 	case "LIMIT":
 		return OrderTypeLimit, nil
+	case "LIMIT_MAKER":
+		return OrderTypeLimitMaker, nil
 	default:
 		return OrderTypeUnknown, fmt.Errorf("unknown order type: %s", s)
 	}
@@ -292,6 +297,8 @@ const (
 	OrderTypeMarket
 	// OrderTypeLimit 限价单
 	OrderTypeLimit
+	// OrderTypeLimitMaker 限价单maker
+	OrderTypeLimitMaker
 )
 
 // PositionStatus 持仓状态:
